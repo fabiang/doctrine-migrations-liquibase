@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Toilal\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use PHPUnit\Framework\TestCase;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\Index;
 
 /**
- * @coversDefaultClass Toilal\Doctrine\Migrations\Liquibase\IndexColumns
+ * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\IndexColumns
  */
 final class IndexColumnsTest extends TestCase
 {

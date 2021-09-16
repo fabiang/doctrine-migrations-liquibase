@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Toilal\Doctrine\Migrations\Liquibase;
+namespace Tests\Fabiang\Doctrine\Migrations\Liquibase;
 
-use Tests\Toilal\Doctrine\Migrations\Liquibase\Database\AbstractDatabaseTest;
-use Toilal\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
+use Tests\Fabiang\Doctrine\Migrations\Liquibase\Database\AbstractDatabaseTest;
+use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
 
 class SqliteTest extends AbstractDatabaseTest
 {

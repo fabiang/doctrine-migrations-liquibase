@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tests\Toilal\Doctrine\Migrations\Liquibase\Database;
+namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Database;
 
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use PHPUnit\Framework\TestCase;
-use Toilal\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
-use Toilal\Doctrine\Migrations\Liquibase\LiquibaseSchemaTool;
+use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
+use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseSchemaTool;
 
 abstract class AbstractDatabaseTest extends TestCase
 {
@@ -75,7 +75,7 @@ abstract class AbstractDatabaseTest extends TestCase
 
         $config->setAutoGenerateProxyClasses(true);
         $config->setProxyDir(\sys_get_temp_dir());
-        $config->setProxyNamespace('Toilal\Doctrine\Migrations\Liquibase\Proxies');
+        $config->setProxyNamespace('Fabiang\Doctrine\Migrations\Liquibase\Proxies');
 
         //$config->setQueryCacheImpl(new ArrayCache());
         //$config->setMetadataCacheImpl(new ArrayCache());

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Toilal\Doctrine\Migrations\Liquibase\Entity;
+namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 

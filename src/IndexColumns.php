@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Toilal\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;

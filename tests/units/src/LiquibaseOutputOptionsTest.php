@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Toilal\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use PHPUnit\Framework\TestCase;
 
 /**
- * @coversDefaultClass Toilal\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions
+ * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions
  */
 final class LiquibaseOutputOptionsTest extends TestCase
 {

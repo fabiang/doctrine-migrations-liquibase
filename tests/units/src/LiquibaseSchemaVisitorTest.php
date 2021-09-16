@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Toilal\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophecy\ObjectProphecy;
-use Toilal\Doctrine\Migrations\Liquibase\LiquibaseOutput;
+use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutput;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Sequence;
 
 /**
- * @coversDefaultClass Toilal\Doctrine\Migrations\Liquibase\LiquibaseSchemaVisitor
+ * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseSchemaVisitor
  */
 final class LiquibaseSchemaVisitorTest extends TestCase
 {

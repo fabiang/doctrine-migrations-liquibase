@@ -1,5 +1,5 @@
 {
-    "name": "toilal/doctrine-migrations-liquibase",
+    "name": "fabiang/doctrine-migrations-liquibase",
     "description": "Generate Liquibase ChangeLog from Doctrine Entities",
     "type": "library",
     "license": "MIT",
@@ -7,16 +7,20 @@
         {
             "name": "Rémi Alvergnat",
             "email": "toilal.dev@gmail.com"
+        },
+        {
+            "name": "Fabian Grutschus",
+            "email": "github@lubyte.de"
         }
     ],
     "autoload": {
         "psr-4": {
-            "Toilal\\Doctrine\\Migrations\\Liquibase\\": "src/"
+            "Fabiang\\Doctrine\\Migrations\\Liquibase\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Toilal\\Doctrine\\Migrations\\Liquibase\\": "tests/integration"
+            "Tests\\Fabiang\\Doctrine\\Migrations\\Liquibase\\": "tests/integration"
         }
     },
     "require": {
@@ -30,6 +34,9 @@
         "vimeo/psalm": "^4.10",
         "doctrine/cache": "^2.1",
         "phpspec/prophecy": "^1.14"
+    },
+    "replace": {
+        "toilal/doctrine-migrations-liquibase": "self.version"
     },
     "scripts": {
         "lint": "psalm --no-cache",

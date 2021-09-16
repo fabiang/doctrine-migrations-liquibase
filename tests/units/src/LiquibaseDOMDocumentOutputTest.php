@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Toilal\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Xpath\Assert as XPathAssert;
@@ -22,7 +22,7 @@ use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Schema\ColumnDiff;
 
 /**
- * @coversDefaultClass Toilal\Doctrine\Migrations\Liquibase\LiquibaseDOMDocumentOutput
+ * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseDOMDocumentOutput
  */
 final class LiquibaseDOMDocumentOutputTest extends TestCase
 {
