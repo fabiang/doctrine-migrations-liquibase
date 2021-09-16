@@ -1,7 +1,8 @@
 # doctrine-migrations-liquibase
 Generate Liquibase ChangeLog from Doctrine Entities.
 
-[![Build Status](https://img.shields.io/travis/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://travis-ci.org/fabiang/doctrine-migrations-liquibase)
+[![Unit Tests](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/unit.yml/badge.svg)](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/unit.yml)
+[![Integration Tests](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/integration.yml/badge.svg)](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/integration.yml)
 [![PHP](https://img.shields.io/packagist/php-v/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
 [![Version](https://img.shields.io/packagist/v/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
 [![Downloads](https://img.shields.io/packagist/dt/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
@@ -26,11 +27,3 @@ echo $changeLog->saveXML();
 $diffChangeLog = $schemaTool->diffChangeLog()->getResult();
 echo $diffChangeLog->saveXML();
 ```
-
-## Command Line Usage
-
-To be done ...
-
-## Symfony Command
-
-To be done ...
