@@ -3,10 +3,7 @@ Generate Liquibase ChangeLog from Doctrine Entities.
 
 [![Unit Tests](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/unit.yml/badge.svg)](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/unit.yml)
 [![Integration Tests](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/integration.yml/badge.svg)](https://github.com/fabiang/doctrine-migrations-liquibase/actions/workflows/integration.yml)
-[![PHP](https://img.shields.io/packagist/php-v/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
-[![Version](https://img.shields.io/packagist/v/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
-[![Downloads](https://img.shields.io/packagist/dt/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
-[![License](https://img.shields.io/packagist/l/fabiang/doctrine-migrations-liquibase.svg?style=flat-square)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
+[![Latest Stable Version](http://poser.pugx.org/fabiang/doctrine-migrations-liquibase/v)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase) [![Total Downloads](http://poser.pugx.org/fabiang/doctrine-migrations-liquibase/downloads)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase) [![Latest Unstable Version](http://poser.pugx.org/fabiang/doctrine-migrations-liquibase/v/unstable)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase) [![License](http://poser.pugx.org/fabiang/doctrine-migrations-liquibase/license)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase) [![PHP Version Require](http://poser.pugx.org/fabiang/doctrine-migrations-liquibase/require/php)](https://packagist.org/packages/fabiang/doctrine-migrations-liquibase)
 
 ## API Usage
 
