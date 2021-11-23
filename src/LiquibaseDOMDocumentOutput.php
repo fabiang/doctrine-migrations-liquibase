@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ColumnDiff;
@@ -13,14 +13,13 @@ use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
-use Doctrine\DBAL\Platforms\MySqlPlatform;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
 use DOMElement;
 
 class LiquibaseDOMDocumentOutput implements LiquibaseOutput
 {
-
     private DOMDocument $document;
     private LiquibaseOutputOptions $options;
     private AbstractPlatform $platform;
@@ -47,7 +46,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         }
 
         $this->root     = $this->document->createElement('databaseChangeLog');
-        $this->platform = new MySqlPlatform();
+        $this->platform = new MySQLPlatform();
     }
 
     public function getDocument(): DOMDocument
@@ -71,7 +70,11 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         $changeSet->setAttribute('author', $this->options->getChangeSetAuthor());
         $sanitizedId = preg_replace('/[_\.]/', '-', $id);
         assert($sanitizedId !== null);
-        $changeSet->setAttribute('id', $this->options->isChangeSetUniqueId() ? $sanitizedId . '-' . uniqid() : $sanitizedId);
+        $changeSet->setAttribute(
+            'id',
+            $this->options->isChangeSetUniqueId()
+            ? $sanitizedId . '-' . uniqid() : $sanitizedId
+        );
         $this->root->appendChild($changeSet);
         return $changeSet;
     }
@@ -98,7 +101,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
 
     public function dropForeignKey(ForeignKeyConstraint $orphanedForeignKey, Table $localTable): void
     {
-        $changeSetElt = $this->createChangeSet('drop-foreign-key-' . $orphanedForeignKey->getName());
+        $changeSetElt = $this->createChangeSet(
+            'drop-foreign-key-' . $orphanedForeignKey->getName()
+        );
 
         $tableName      = QualifiedName::fromAsset($localTable);
         $foreignKeyName = QualifiedName::fromAsset($orphanedForeignKey);
@@ -119,7 +124,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
 
     public function alterSequence(Sequence $sequence): void
     {
-        $commentElt = $this->document->createComment(' alterSequence is not supported (sequence: ' . $sequence->getName() . ')');
+        $commentElt = $this->document->createComment(
+            ' alterSequence is not supported (sequence: ' . $sequence->getName() . ')'
+        );
         $this->root->appendChild($commentElt);
     }
 

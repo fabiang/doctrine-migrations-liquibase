@@ -61,6 +61,8 @@ final class LiquibaseSchemaToolTest extends TestCase
             ->willReturn($this->platform->reveal());
         $this->connection->getSchemaManager()
             ->willReturn($this->schemaManager->reveal());
+        $this->connection->createSchemaManager()
+            ->willReturn($this->schemaManager->reveal());
 
         $this->em = $this->prophesize(EntityManagerInterface::class);
         $this->em->getConnection()->willReturn($this->connection->reveal());
