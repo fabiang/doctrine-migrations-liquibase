@@ -4,29 +4,30 @@ declare(strict_types=1);
 
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception as DBALException;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\ColumnDiff;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\Sequence;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Schema\TableDiff;
+use Doctrine\DBAL\Types as DoctrineType;
+use Doctrine\ORM\EntityManagerInterface;
+use DOMDocument;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Xpath\Assert as XPathAssert;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use DOMDocument;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Exception as DBALException;
-use Doctrine\DBAL\Schema\ForeignKeyConstraint;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Schema\Sequence;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types as DoctrineType;
-use Doctrine\DBAL\Schema\Index;
-use Doctrine\DBAL\Schema\TableDiff;
-use Doctrine\DBAL\Schema\ColumnDiff;
 
 /**
  * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseDOMDocumentOutput
  */
 final class LiquibaseDOMDocumentOutputTest extends TestCase
 {
-
+    use ProphecyTrait;
     use XPathAssert;
 
     private LiquibaseDOMDocumentOutput $output;
@@ -247,8 +248,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
             ->shouldBeCalled()
             ->willReturn([
                 $primaryIndex1,
-                $uniqueIndex1
-        ]);
+                $uniqueIndex1,
+            ]);
 
         $this->output->createTable($table->reveal());
         $this->output->terminated();
@@ -325,19 +326,19 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
             ->willReturn([]);
 
         $this->platform->getVarcharTypeDeclarationSQL([
-                'name'             => 'column1',
-                'type'             => $columnType1,
-                'default'          => null,
-                'notnull'          => true,
-                'length'           => 10,
-                'precision'        => 10,
-                'scale'            => 0,
-                'fixed'            => false,
-                'unsigned'         => false,
-                'autoincrement'    => false,
-                'columnDefinition' => null,
-                'comment'          => null
-            ])
+            'name'             => 'column1',
+            'type'             => $columnType1,
+            'default'          => null,
+            'notnull'          => true,
+            'length'           => 10,
+            'precision'        => 10,
+            'scale'            => 0,
+            'fixed'            => false,
+            'unsigned'         => false,
+            'autoincrement'    => false,
+            'columnDefinition' => null,
+            'comment'          => null,
+        ])
             ->shouldBeCalled()
             ->willReturn('MYVARCHAR(10)');
 
@@ -981,5 +982,4 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $table->getIndexes()->willReturn([]);
         return $table;
     }
-
 }

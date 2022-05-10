@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-
 
 /**
  * Foo
@@ -14,11 +15,11 @@ use Doctrine\ORM\Mapping as ORM;
 class Foo
 {
     /**
-     * @var int|null
-     *
      * @ORM\Id()
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     *
+     * @var int|null
      */
     private $id;
 

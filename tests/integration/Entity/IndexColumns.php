@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-
 
 /**
  * @ORM\Entity
@@ -16,33 +18,32 @@ use Doctrine\ORM\Mapping as ORM;
 class IndexColumns
 {
     /**
-     * @var int|null
-     *
      * @ORM\Id()
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     *
+     * @var int|null
      */
     private $id;
 
     /**
-     * @var \DateTime|null
-     *
-     *
      * @ORM\Column(nullable=true, type="date")
+     *
+     * @var DateTime|null
      */
     private $date;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column(nullable=true)
+     *
+     * @var string|null
      */
     private $libelle;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column(nullable=true, length=500)
+     *
+     * @var string|null
      */
     private $commentaire;
 
@@ -63,7 +64,7 @@ class IndexColumns
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
     public function getDate()
     {
@@ -71,7 +72,7 @@ class IndexColumns
     }
 
     /**
-     * @param \DateTime|null $date
+     * @param DateTime|null $date
      */
     public function setDate($date)
     {

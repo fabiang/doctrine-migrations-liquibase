@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
-use PHPUnit\Framework\TestCase;
-use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\Table;
+use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\IndexColumns
  */
 final class IndexColumnsTest extends TestCase
 {
+    use ProphecyTrait;
 
     /**
      * @test
@@ -64,7 +66,7 @@ final class IndexColumnsTest extends TestCase
                 $uniqueIndex1,
                 $uniqueIndex2,
                 $otherIndex2,
-        ]);
+            ]);
 
         $object = new IndexColumns($table->reveal());
 
@@ -73,12 +75,11 @@ final class IndexColumnsTest extends TestCase
         $this->assertSame(
             [
                 'test3' => $uniqueIndex1,
-                'test4' => $uniqueIndex2
+                'test4' => $uniqueIndex2,
             ],
             $object->getUniqueColumns()
         );
 
         $this->assertSame([$otherIndex1, $otherIndex2], $object->getOtherIndexes());
     }
-
 }

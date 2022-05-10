@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-
 
 /**
  * Foo
@@ -14,25 +16,25 @@ use Doctrine\ORM\Mapping as ORM;
 class ReservedKeywords
 {
     /**
-     * @var int|null
-     *
      * @ORM\Id()
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     *
+     * @var int|null
      */
     private $id;
 
     /**
-     * @var \DateTime|null
-     *
      * @ORM\Column(type="date")
+     *
+     * @var DateTime|null
      */
     private $from;
 
     /**
-     * @var \DateTime|null
-     *
      * @ORM\Column(type="datetime")
+     *
+     * @var DateTime|null
      */
     private $to;
 
@@ -53,7 +55,7 @@ class ReservedKeywords
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
     public function getFrom()
     {
@@ -61,7 +63,7 @@ class ReservedKeywords
     }
 
     /**
-     * @param \DateTime|null $from
+     * @param DateTime|null $from
      */
     public function setFrom($from)
     {
@@ -69,7 +71,7 @@ class ReservedKeywords
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
     public function getTo()
     {
@@ -77,7 +79,7 @@ class ReservedKeywords
     }
 
     /**
-     * @param \DateTime|null $to
+     * @param DateTime|null $to
      */
     public function setTo($to)
     {

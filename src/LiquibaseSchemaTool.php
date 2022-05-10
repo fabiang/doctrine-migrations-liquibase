@@ -7,19 +7,19 @@ namespace Fabiang\Doctrine\Migrations\Liquibase;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\SchemaDiff;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Tools\SchemaTool;
 use DOMDocument;
+
+use function strcmp;
+use function usort;
 
 class LiquibaseSchemaTool extends SchemaTool
 {
-
     private EntityManagerInterface $em;
 
-    /**
-     * LiquibaseSchemaTool constructor.
-     */
     public function __construct(EntityManagerInterface $em)
     {
         parent::__construct($em);
@@ -29,11 +29,11 @@ class LiquibaseSchemaTool extends SchemaTool
     /**
      * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
      */
-    private function sanitizeOutputParameter(object $output = null): LiquibaseOutput
+    private function sanitizeOutputParameter(?object $output = null): LiquibaseOutput
     {
         if ($output instanceof LiquibaseOutputOptions) {
             return new LiquibaseDOMDocumentOutput($output);
-        } else if ($output instanceof LiquibaseOutput) {
+        } elseif ($output instanceof LiquibaseOutput) {
             return $output;
         }
         return new LiquibaseDOMDocumentOutput();
@@ -41,7 +41,7 @@ class LiquibaseSchemaTool extends SchemaTool
 
     private function sanitizeMetadatas(?array $metadata = null): array
     {
-        if (!$metadata) {
+        if (! $metadata) {
             $metadata = $this->em->getMetadataFactory()->getAllMetadata();
         }
         usort($metadata, function (ClassMetadata $a, ClassMetadata $b) {
@@ -55,8 +55,8 @@ class LiquibaseSchemaTool extends SchemaTool
      *
      * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
      * @param array|null $metadata
-     * @return \DOMDocument|mixed
-     * @throws \Doctrine\ORM\ORMException
+     * @return DOMDocument|mixed
+     * @throws ORMException
      */
     public function diffChangeLog(?object $output = null, ?array $metadata = null)
     {
@@ -67,7 +67,7 @@ class LiquibaseSchemaTool extends SchemaTool
 
         $fromSchema = $sm->createSchema();
         $this->removeLiquibaseTables($fromSchema);
-        $toSchema   = $this->getSchemaFromMetadata($metadata);
+        $toSchema = $this->getSchemaFromMetadata($metadata);
 
         $comparator = new Comparator();
         $schemaDiff = $comparator->compare($fromSchema, $toSchema);
@@ -80,8 +80,8 @@ class LiquibaseSchemaTool extends SchemaTool
      *
      * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
      * @param array|null $metadata
-     * @return \DOMDocument|mixed
-     * @throws \Doctrine\ORM\ORMException
+     * @return DOMDocument|mixed
+     * @throws ORMException
      */
     public function changeLog($output = null, $metadata = null)
     {
@@ -103,7 +103,7 @@ class LiquibaseSchemaTool extends SchemaTool
      * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
      * @return DOMDocument|mixed
      */
-    public function diffChangeLogFromSchemaDiff(SchemaDiff $schemaDiff, object $output = null)
+    public function diffChangeLogFromSchemaDiff(SchemaDiff $schemaDiff, ?object $output = null)
     {
         $output = $this->sanitizeOutputParameter($output);
 
@@ -160,5 +160,4 @@ class LiquibaseSchemaTool extends SchemaTool
             $fromSchema->dropTable('liquibase_lock');
         }
     }
-
 }

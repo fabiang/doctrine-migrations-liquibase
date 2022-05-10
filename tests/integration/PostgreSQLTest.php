@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase;
 
-use Tests\Fabiang\Doctrine\Migrations\Liquibase\Database\AbstractPostgreSQLTest;
+use Doctrine\ORM\ORMException;
 use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
+
+use function getenv;
 
 /**
  * @group docker
  */
 class PostgreSQLTest extends Database\AbstractDatabaseTest
 {
-
     public function getConnectionParameters(): array
     {
         return [
@@ -21,7 +22,7 @@ class PostgreSQLTest extends Database\AbstractDatabaseTest
             'port'     => getenv('POSTGRES_PORT'),
             'dbname'   => getenv('POSTGRES_DB'),
             'user'     => getenv('POSTGRES_USER'),
-            'password' => getenv('POSTGRES_PASSWORD')
+            'password' => getenv('POSTGRES_PASSWORD'),
         ];
     }
 
@@ -31,13 +32,13 @@ class PostgreSQLTest extends Database\AbstractDatabaseTest
     }
 
     /**
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
     public function testCreateWithDefaultOptions(): void
     {
         $options = new LiquibaseOutputOptions();
         $options->setChangeSetUniqueId(false);
-        $output  = $this->changeLog($options);
+        $output = $this->changeLog($options);
 
         $expected = <<<'EOT'
 <?xml version="1.0"?>
@@ -99,13 +100,13 @@ EOT;
     }
 
     /**
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
     public function testUpdateFromEmptyDatabaseWithDefaultOptions(): void
     {
         $options = new LiquibaseOutputOptions();
         $options->setChangeSetUniqueId(false);
-        $output  = $this->diffChangeLog($options);
+        $output = $this->diffChangeLog($options);
 
         $expected = <<<'EOT'
 <?xml version="1.0"?>
@@ -162,5 +163,4 @@ EOT;
 
         self::assertXmlStringEqualsXmlString($expected, $output);
     }
-
 }

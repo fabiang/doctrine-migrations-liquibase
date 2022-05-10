@@ -21,3 +21,8 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-testdb}
     ports:
       - "3306:3306"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 26677
+        hard: 46677

@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
-use PHPUnit\Framework\TestCase;
-use Prophecy\Prophecy\ObjectProphecy;
-use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutput;
-use Doctrine\DBAL\Schema\Schema;
-use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Sequence;
+use Doctrine\DBAL\Schema\Table;
+use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutput;
+use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 
 /**
  * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseSchemaVisitor
  */
 final class LiquibaseSchemaVisitorTest extends TestCase
 {
+    use ProphecyTrait;
 
     private LiquibaseSchemaVisitor $object;
     private ObjectProphecy $output;
@@ -74,5 +76,4 @@ final class LiquibaseSchemaVisitorTest extends TestCase
         $this->output->createSequence($sequence)->shouldBeCalled();
         $this->object->acceptSequence($sequence);
     }
-
 }

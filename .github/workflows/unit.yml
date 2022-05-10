@@ -18,9 +18,9 @@ jobs:
         - version: '7.4'
           composer-args: ''
         - version: '8.0'
-          composer-args: '--ignore-platform-reqs'
-#        - version: '8.1'
-#          composer-args: '--ignore-platform-reqs'
+          composer-args: ''
+        - version: '8.1'
+          composer-args: '--ignore-platform-req=php'
         prefer-lowest: ['', '--prefer-lowest']
 
     name: Unit Tests - PHP ${{ matrix.php.version }} ${{ matrix.prefer-lowest }}

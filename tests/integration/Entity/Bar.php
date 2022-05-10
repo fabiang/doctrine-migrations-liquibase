@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -13,13 +15,12 @@ use Doctrine\ORM\Mapping as ORM;
 class Bar
 {
     /**
-     * @var string|null
-     *
      * @ORM\Id()
      * @ORM\Column(type="string")
+     *
+     * @var string|null
      */
     private $id;
-
 
     /**
      * @return null|string

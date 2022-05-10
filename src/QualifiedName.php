@@ -6,11 +6,13 @@ namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use Doctrine\DBAL\Schema\AbstractAsset;
 
+use function count;
+use function explode;
+
 class QualifiedName
 {
-
     private ?string $namespaceName = null;
-    private string $name          = '';
+    private string $name           = '';
 
     public static function fromQualifiedName(string $qualifiedName): self
     {
@@ -54,5 +56,4 @@ class QualifiedName
     {
         return $this->name;
     }
-
 }

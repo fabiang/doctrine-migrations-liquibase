@@ -6,10 +6,9 @@ namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 class LiquibaseOutputOptions
 {
-
     private bool $usePlatformTypes  = false;
     private bool $changeSetUniqueId = true;
-    private string $changeSetAuthor   = 'doctrine-migrations-liquibase';
+    private string $changeSetAuthor = 'doctrine-migrations-liquibase';
 
     public function isUsePlatformTypes(): bool
     {
@@ -43,5 +42,4 @@ class LiquibaseOutputOptions
         $this->changeSetAuthor = $changeSetAuthor;
         return $this;
     }
-
 }

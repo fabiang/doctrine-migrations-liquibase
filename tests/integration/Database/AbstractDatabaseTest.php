@@ -6,26 +6,27 @@ namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Database;
 
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
-use PHPUnit\Framework\TestCase;
+use Doctrine\ORM\ORMException;
 use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
 use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseSchemaTool;
+use PHPUnit\Framework\TestCase;
+
+use function dirname;
+use function extension_loaded;
+use function join;
+use function sprintf;
+use function sys_get_temp_dir;
 
 abstract class AbstractDatabaseTest extends TestCase
 {
-
     /** @var EntityManager */
     protected $em;
 
-    /**
-     * @var array
-     */
+    /** @var array */
     protected $databaseState = [];
 
     abstract protected function getConnectionParameters(): array;
 
-    /**
-     * @return string
-     */
     abstract protected function getEntitiesPath(): string;
 
     /**
@@ -33,7 +34,6 @@ abstract class AbstractDatabaseTest extends TestCase
      */
     protected function setUpDatabase(): void
     {
-
     }
 
     /**
@@ -41,19 +41,18 @@ abstract class AbstractDatabaseTest extends TestCase
      */
     protected function tearDownDatabase(): void
     {
-
     }
 
     private function driverIsAvailable(): bool
     {
         $params = $this->getConnectionParameters();
-        if (!empty($params['driver'])) {
+        if (! empty($params['driver'])) {
             $driverName = $params['driver'];
 
-            if (!extension_loaded($driverName)) {
+            if (! extension_loaded($driverName)) {
                 $this->markTestSkipped(sprintf(
-                        'Driver "%s" is not available',
-                        $driverName
+                    'Driver "%s" is not available',
+                    $driverName
                 ));
 
                 return false;
@@ -66,7 +65,7 @@ abstract class AbstractDatabaseTest extends TestCase
     }
 
     /**
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
     protected function setUp(): void
     {
@@ -74,7 +73,7 @@ abstract class AbstractDatabaseTest extends TestCase
         $config = new Configuration();
 
         $config->setAutoGenerateProxyClasses(true);
-        $config->setProxyDir(\sys_get_temp_dir());
+        $config->setProxyDir(sys_get_temp_dir());
         $config->setProxyNamespace('Fabiang\Doctrine\Migrations\Liquibase\Proxies');
 
         //$config->setQueryCacheImpl(new ArrayCache());
@@ -93,23 +92,21 @@ abstract class AbstractDatabaseTest extends TestCase
     }
 
     /**
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
-    protected function changeLog(LiquibaseOutputOptions $options = null): string
+    protected function changeLog(?LiquibaseOutputOptions $options = null): string
     {
         $schemaTool = new LiquibaseSchemaTool($this->em);
-        $output     = $schemaTool->changeLog($options)->saveXML();
-        return $output;
+        return $schemaTool->changeLog($options)->saveXML();
     }
 
     /**
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException
      */
-    protected function diffChangeLog(LiquibaseOutputOptions $options = null): string
+    protected function diffChangeLog(?LiquibaseOutputOptions $options = null): string
     {
         $schemaTool = new LiquibaseSchemaTool($this->em);
-        $output     = $schemaTool->diffChangeLog($options)->saveXML();
-        return $output;
+        return $schemaTool->diffChangeLog($options)->saveXML();
     }
 
     protected function tearDown(): void
@@ -117,5 +114,4 @@ abstract class AbstractDatabaseTest extends TestCase
         $this->tearDownDatabase();
         $this->em->close();
     }
-
 }

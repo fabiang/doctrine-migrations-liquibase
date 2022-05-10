@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions
  */
 final class LiquibaseOutputOptionsTest extends TestCase
 {
+    use ProphecyTrait;
 
     private LiquibaseOutputOptions $object;
 
@@ -46,5 +48,4 @@ final class LiquibaseOutputOptionsTest extends TestCase
         $this->object->setChangeSetAuthor('user');
         $this->assertSame('user', $this->object->getChangeSetAuthor());
     }
-
 }

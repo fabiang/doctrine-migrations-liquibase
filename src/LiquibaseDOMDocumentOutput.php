@@ -6,17 +6,31 @@ namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ColumnDiff;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Index;
+use Doctrine\DBAL\Schema\SchemaException;
 use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
-use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
 use DOMElement;
+
+use function array_key_exists;
+use function array_search;
+use function array_splice;
+use function assert;
+use function count;
+use function implode;
+use function in_array;
+use function intval;
+use function is_string;
+use function preg_replace;
+use function strval;
+use function uniqid;
 
 class LiquibaseDOMDocumentOutput implements LiquibaseOutput
 {
@@ -25,9 +39,6 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
     private AbstractPlatform $platform;
     private DOMElement $root;
 
-    /**
-     * LiquibaseDOMDocumentOuput constructor.
-     */
     public function __construct(?LiquibaseOutputOptions $options = null, ?DOMDocument $document = null)
     {
         if (null === $options) {
@@ -66,7 +77,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
 
     protected function createChangeSet(string $id): DOMElement
     {
-        $changeSet   = $this->document->createElement('changeSet');
+        $changeSet = $this->document->createElement('changeSet');
         $changeSet->setAttribute('author', $this->options->getChangeSetAuthor());
         $sanitizedId = preg_replace('/[_\.]/', '-', $id);
         assert($sanitizedId !== null);
@@ -130,11 +141,6 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         $this->root->appendChild($commentElt);
     }
 
-    /**
-     * @param Sequence $sequence
-     *
-     * @return void
-     */
     public function dropSequence(Sequence $sequence): void
     {
         $changeSetElt = $this->createChangeSet('drop-sequence-' . $sequence->getName());
@@ -173,7 +179,6 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
     }
 
     /**
-     * @param Column $column
      * @return string
      */
     protected function getColumnType(Column $column)
@@ -182,7 +187,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
             $sqlType = $column->getColumnDefinition();
             assert($sqlType !== null);
             return $sqlType;
-        } else if ($this->options->isUsePlatformTypes()) {
+        } elseif ($this->options->isUsePlatformTypes()) {
             $sqlType = $column->getType()->getSQLDeclaration($column->toArray(), $this->platform);
             $sqlType = preg_replace('/\(.*?\)/', '', $sqlType);
             assert($sqlType !== null);
@@ -201,7 +206,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         $length = $column->getLength();
         if ($length !== null) {
             $sqlType .= '(' . $length . ')';
-        };
+        }
 
         return $sqlType;
     }
@@ -226,14 +231,14 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
             $unique               = true;
             $uniqueConstraintName = $indexColumns->getUniqueColumns()[$column->getName()]->getName();
         }
-        $nullable = !$column->getNotnull();
+        $nullable = ! $column->getNotnull();
 
-        if ($primaryKey || !$nullable || $unique) {
+        if ($primaryKey || ! $nullable || $unique) {
             $constraintsElt = $this->document->createElement('constraints');
             if ($primaryKey) {
                 $constraintsElt->setAttribute('primaryKey', "true");
             }
-            if (!$nullable) {
+            if (! $nullable) {
                 $constraintsElt->setAttribute('nullable', "false");
             }
             if ($unique) {
@@ -353,7 +358,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
     }
 
     /**
-     * @throws \Doctrine\DBAL\Schema\SchemaException
+     * @throws SchemaException
      */
     public function alterTable(TableDiff $tableDiff): void
     {
@@ -392,7 +397,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         $this->root->appendChild($changeSetElt);
     }
 
-    protected function alterTableRenameTable(TableDiff $tableDiff, QualifiedName $fromTableName, \DOMElement $changeSetElt): QualifiedName
+    protected function alterTableRenameTable(TableDiff $tableDiff, QualifiedName $fromTableName, DOMElement $changeSetElt): QualifiedName
     {
         if (is_string($tableDiff->newName) && $fromTableName->getName() !== $tableDiff->newName) {
             $renameTable = $this->document->createElement('renameTable');
@@ -410,9 +415,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         return $fromTableName;
     }
 
-    protected function alterTableAddedColumns(TableDiff $tableDiff, QualifiedName $fromTableName, IndexColumns $indexColumns, \DOMElement $changeSetElt): void
+    protected function alterTableAddedColumns(TableDiff $tableDiff, QualifiedName $fromTableName, IndexColumns $indexColumns, DOMElement $changeSetElt): void
     {
-        if ($tableDiff->addedColumns && count($tableDiff->addedColumns)) {
+        if ($tableDiff->addedColumns && count($tableDiff->addedColumns) > 0) {
             $addColumnElt = $this->document->createElement('addColumn');
 
             if ($schemaName = $fromTableName->getNamespaceName()) {
@@ -433,7 +438,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
     }
 
     /**
-     * @throws \Doctrine\DBAL\Schema\SchemaException
+     * @throws SchemaException
      */
     protected function alterTableAddedIndexes(TableDiff $tableDiff, QualifiedName $fromTableName, IndexColumns $indexColumns, DOMElement $changeSetElt): void
     {
@@ -578,9 +583,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
 
         $properties = $columnDiff->changedProperties;
 
-        if ($properties && count($properties)) {
+        if (count($properties) > 0) {
             $typeIndex = array_search('type', $properties);
-            if ($typeIndex !== FALSE) {
+            if ($typeIndex !== false) {
                 $properties = array_splice($properties, 1, intval($typeIndex));
 
                 $modifyDataTypeElt = $this->document->createElement('modifyDataType');
@@ -596,7 +601,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
             }
         }
 
-        if ($properties && count($properties)) {
+        if (count($properties) > 0) {
             $commentElt = $this->document->createComment(' Some column property changes are not supported (column: ' . $columnDiff->getOldColumnName()->getName() . ' for properties [' . implode(', ', $properties) . '])');
             $changeSetElt->appendChild($commentElt);
         }
@@ -632,5 +637,4 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
     {
         $this->document->appendChild($this->root);
     }
-
 }

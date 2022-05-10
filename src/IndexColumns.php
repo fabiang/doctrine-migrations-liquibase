@@ -7,27 +7,20 @@ namespace Fabiang\Doctrine\Migrations\Liquibase;
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
 
+use function array_push;
+use function count;
+
 class IndexColumns
 {
-
-    /**
-     * @var string[]
-     */
+    /** @var string[] */
     private array $primaryColumns = [];
 
-    /**
-     * @var Index[]
-     */
+    /** @var Index[] */
     private array $otherIndexes = [];
 
-    /**
-     * @var Index[]
-     */
+    /** @var Index[] */
     private array $uniqueColumns = [];
 
-    /**
-     * IndexColumns constructor.
-     */
     public function __construct(Table $table)
     {
         foreach ($table->getIndexes() as $index) {
@@ -35,7 +28,7 @@ class IndexColumns
                 foreach ($index->getColumns() as $primaryColumn) {
                     array_push($this->primaryColumns, $primaryColumn);
                 }
-            } else if ($index->isUnique() && count($index->getColumns()) === 1) {
+            } elseif ($index->isUnique() && count($index->getColumns()) === 1) {
                 $this->uniqueColumns[$index->getColumns()[0]] = $index;
             } else {
                 array_push($this->otherIndexes, $index);
@@ -71,5 +64,4 @@ class IndexColumns
     {
         return $this->primaryColumns;
     }
-
 }

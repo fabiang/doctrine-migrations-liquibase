@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManagerInterface;
 
 interface LiquibaseOutput
 {
-
     public function createSchema(string $newNamespace): void;
 
     public function dropForeignKey(ForeignKeyConstraint $orphanedForeignKey, Table $localTable): void;

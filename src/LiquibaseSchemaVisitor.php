@@ -14,7 +14,6 @@ use Doctrine\DBAL\Schema\Visitor\Visitor;
 
 class LiquibaseSchemaVisitor implements Visitor
 {
-
     private LiquibaseOutput $output;
 
     public function __construct(LiquibaseOutput $output)
@@ -51,5 +50,4 @@ class LiquibaseSchemaVisitor implements Visitor
     {
         $this->output->createSequence($sequence);
     }
-
 }

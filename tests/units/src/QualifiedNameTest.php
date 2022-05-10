@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
-use PHPUnit\Framework\TestCase;
 use Doctrine\DBAL\Schema\AbstractAsset;
+use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\QualifiedName
  */
 final class QualifiedNameTest extends TestCase
 {
+    use ProphecyTrait;
 
     private QualifiedName $object;
 
@@ -87,5 +89,4 @@ final class QualifiedNameTest extends TestCase
         $this->assertSame('name', $this->object->getName());
         $this->assertSame('namespace', $this->object->getNamespaceName());
     }
-
 }
