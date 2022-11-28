@@ -84,7 +84,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
         $changeSet->setAttribute(
             'id',
             $this->options->isChangeSetUniqueId()
-            ? $sanitizedId . '-' . uniqid() : $sanitizedId
+                ? $sanitizedId . '-' . uniqid() : $sanitizedId
         );
         $this->root->appendChild($changeSet);
         return $changeSet;
@@ -231,14 +231,14 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutput
             $unique               = true;
             $uniqueConstraintName = $indexColumns->getUniqueColumns()[$column->getName()]->getName();
         }
-        $nullable = ! $column->getNotnull();
+        $nullable = !$column->getNotnull();
 
-        if ($primaryKey || ! $nullable || $unique) {
+        if ($primaryKey || !$nullable || $unique) {
             $constraintsElt = $this->document->createElement('constraints');
             if ($primaryKey) {
                 $constraintsElt->setAttribute('primaryKey', "true");
             }
-            if (! $nullable) {
+            if (!$nullable) {
                 $constraintsElt->setAttribute('nullable', "false");
             }
             if ($unique) {

@@ -144,8 +144,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="drop-foreign-key-namespace-test"][@author="phpunit"]'
-            . '/dropForeignKeyConstraint[@baseTableSchemaName="namespace"][@baseTableName="test2"][@constraintName="test"]',
+                . '/changeSet[@id="drop-foreign-key-namespace-test"][@author="phpunit"]'
+                . '/dropForeignKeyConstraint[@baseTableSchemaName="namespace"][@baseTableName="test2"][@constraintName="test"]',
             $this->output->getDocument()
         );
     }
@@ -184,8 +184,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="drop-sequence-myseq"][@author="phpunit"]'
-            . '/dropSequence[@schemaName="namespace"][@sequenceName="myseq"]',
+                . '/changeSet[@id="drop-sequence-myseq"][@author="phpunit"]'
+                . '/dropSequence[@schemaName="namespace"][@sequenceName="myseq"]',
             $this->output->getDocument()
         );
     }
@@ -207,8 +207,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="create-sequence-myseq"][@author="phpunit"]'
-            . '/createSequence[@schemaName="namespace"][@sequenceName="myseq"][@startValue="test"]',
+                . '/changeSet[@id="create-sequence-myseq"][@author="phpunit"]'
+                . '/createSequence[@schemaName="namespace"][@sequenceName="myseq"][@startValue="test"]',
             $this->output->getDocument()
         );
     }
@@ -256,8 +256,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="create-table-mytable"][@author="phpunit"]'
-            . '/createTable[@tableName="mytable"][@schemaName="namespace"]',
+                . '/changeSet[@id="create-table-mytable"][@author="phpunit"]'
+                . '/createTable[@tableName="mytable"][@schemaName="namespace"]',
             $this->output->getDocument()
         );
 
@@ -269,10 +269,10 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '//createTable/column[1]'
-            . '[@name="column1"]'
-            . '[@type="varchar(10)"]'
-            . '[@remarks="mycomment"]'
-            . '[@defaultValue="somedefault"]',
+                . '[@name="column1"]'
+                . '[@type="varchar(10)"]'
+                . '[@remarks="mycomment"]'
+                . '[@defaultValue="somedefault"]',
             $this->output->getDocument()
         );
         $this->assertXpathMatch(
@@ -282,8 +282,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '//createTable/column[2]'
-            . '[@name="column2"]'
-            . '[@type="int"]',
+                . '[@name="column2"]'
+                . '[@type="int"]',
             $this->output->getDocument()
         );
         $this->assertXpathMatch(
@@ -293,15 +293,15 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '//createTable/column[3]'
-            . '[@name="column3"]'
-            . '[@type="double"]',
+                . '[@name="column3"]'
+                . '[@type="double"]',
             $this->output->getDocument()
         );
 
         $this->assertXpathMatch(
             '//createTable/column[4]'
-            . '[@name="column4"]'
-            . '[@type="bigint"]',
+                . '[@name="column4"]'
+                . '[@type="bigint"]',
             $this->output->getDocument()
         );
     }
@@ -325,22 +325,44 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
             ->shouldBeCalled()
             ->willReturn([]);
 
-        $this->platform->getVarcharTypeDeclarationSQL([
-            'name'             => 'column1',
-            'type'             => $columnType1,
-            'default'          => null,
-            'notnull'          => true,
-            'length'           => 10,
-            'precision'        => 10,
-            'scale'            => 0,
-            'fixed'            => false,
-            'unsigned'         => false,
-            'autoincrement'    => false,
-            'columnDefinition' => null,
-            'comment'          => null,
-        ])
-            ->shouldBeCalled()
-            ->willReturn('MYVARCHAR(10)');
+        if (method_exists(AbstractPlatform::class, 'getStringTypeDeclarationSQL')) {
+            $this->platform->getStringTypeDeclarationSQL([
+                'name'             => 'column1',
+                'type'             => $columnType1,
+                'default'          => null,
+                'notnull'          => true,
+                'length'           => 10,
+                'precision'        => 10,
+                'scale'            => 0,
+                'fixed'            => false,
+                'unsigned'         => false,
+                'autoincrement'    => false,
+                'columnDefinition' => null,
+                'comment'          => null,
+            ])
+                ->shouldBeCalled()
+                ->willReturn('MYVARCHAR(10)');
+        } else {
+            // has been deprecated and removed
+            $this->platform->getVarcharTypeDeclarationSQL([
+                'name'             => 'column1',
+                'type'             => $columnType1,
+                'default'          => null,
+                'notnull'          => true,
+                'length'           => 10,
+                'precision'        => 10,
+                'scale'            => 0,
+                'fixed'            => false,
+                'unsigned'         => false,
+                'autoincrement'    => false,
+                'columnDefinition' => null,
+                'comment'          => null,
+            ])
+                ->shouldBeCalled()
+                ->willReturn('MYVARCHAR(10)');
+        }
+
+
 
         $this->options->setUsePlatformTypes(true);
         $this->output->createTable($table->reveal());
@@ -348,8 +370,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '//createTable/column[1]'
-            . '[@name="column1"]'
-            . '[@type="MYVARCHAR(10)"]',
+                . '[@name="column1"]'
+                . '[@type="MYVARCHAR(10)"]',
             $this->output->getDocument()
         );
     }
@@ -425,14 +447,14 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="create-foreign-keys-mytable"][@author="phpunit"]'
-            . '/addForeignKeyConstraint[@constraintName="namespace.test"]'
-            . '[@baseTableSchemaName="namespace"]'
-            . '[@baseTableName="mytable"]'
-            . '[@baseColumnNames="test1,test2"]'
-            . '[@referencedTableSchemaName="namespace"]'
-            . '[@referencedTableName="othertable"]'
-            . '[@referencedColumnNames="test3,test4"]',
+                . '/changeSet[@id="create-foreign-keys-mytable"][@author="phpunit"]'
+                . '/addForeignKeyConstraint[@constraintName="namespace.test"]'
+                . '[@baseTableSchemaName="namespace"]'
+                . '[@baseTableName="mytable"]'
+                . '[@baseColumnNames="test1,test2"]'
+                . '[@referencedTableSchemaName="namespace"]'
+                . '[@referencedTableName="othertable"]'
+                . '[@referencedColumnNames="test3,test4"]',
             $this->output->getDocument()
         );
     }
@@ -450,8 +472,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="drop-table-mytable"][@author="phpunit"]'
-            . '/dropTable[@schemaName="namespace"][@tableName="mytable"]',
+                . '/changeSet[@id="drop-table-mytable"][@author="phpunit"]'
+                . '/dropTable[@schemaName="namespace"][@tableName="mytable"]',
             $this->output->getDocument()
         );
     }
@@ -475,10 +497,10 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/renameTable[@schemaName="namespace"]'
-            . '[@oldTableName="mytable"]'
-            . '[@newTableName="testtable"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/renameTable[@schemaName="namespace"]'
+                . '[@oldTableName="mytable"]'
+                . '[@newTableName="testtable"]',
             $this->output->getDocument()
         );
     }
@@ -506,9 +528,9 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/addColumn[@schemaName="namespace"][@tableName="mytable"]'
-            . '/column[@name="column1"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/addColumn[@schemaName="namespace"][@tableName="mytable"]'
+                . '/column[@name="column1"]',
             $this->output->getDocument()
         );
     }
@@ -557,8 +579,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/createIndex[@schemaName="namespace"][@tableName="mytable"][@indexName="myindex1"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/createIndex[@schemaName="namespace"][@tableName="mytable"][@indexName="myindex1"]',
             $this->output->getDocument()
         );
 
@@ -568,8 +590,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/createIndex[@schemaName="namespace"][@tableName="mytable"][@indexName="myindex2"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/createIndex[@schemaName="namespace"][@tableName="mytable"][@indexName="myindex2"]',
             $this->output->getDocument()
         );
 
@@ -606,14 +628,14 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/addForeignKeyConstraint'
-            . '[@baseTableSchemaName="namespace"]'
-            . '[@baseTableName="mytable"]'
-            . '[@baseColumnNames="test1,test2"]'
-            . '[@referencedTableSchemaName="namespace"]'
-            . '[@referencedTableName="othertable"]'
-            . '[@referencedColumnNames="test3,test4"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/addForeignKeyConstraint'
+                . '[@baseTableSchemaName="namespace"]'
+                . '[@baseTableName="mytable"]'
+                . '[@baseColumnNames="test1,test2"]'
+                . '[@referencedTableSchemaName="namespace"]'
+                . '[@referencedTableName="othertable"]'
+                . '[@referencedColumnNames="test3,test4"]',
             $this->output->getDocument()
         );
     }
@@ -641,11 +663,11 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/renameColumn[@schemaName="namespace"]'
-            . '[@tableName="mytable"]'
-            . '[@oldColumnName="oldcolumn"]'
-            . '[@newColumnName="newcolumn"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/renameColumn[@schemaName="namespace"]'
+                . '[@tableName="mytable"]'
+                . '[@oldColumnName="oldcolumn"]'
+                . '[@newColumnName="newcolumn"]',
             $this->output->getDocument()
         );
     }
@@ -698,10 +720,10 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/dropColumn[@schemaName="namespace"]'
-            . '[@tableName="mytable"]'
-            . '[@columnName="removedcolumn"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/dropColumn[@schemaName="namespace"]'
+                . '[@tableName="mytable"]'
+                . '[@columnName="removedcolumn"]',
             $this->output->getDocument()
         );
     }
@@ -727,10 +749,10 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/dropIndex[@schemaName="namespace"]'
-            . '[@tableName="mytable"]'
-            . '[@indexName="removeindex"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/dropIndex[@schemaName="namespace"]'
+                . '[@tableName="mytable"]'
+                . '[@indexName="removeindex"]',
             $this->output->getDocument()
         );
     }
@@ -763,11 +785,11 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/dropForeignKeyConstraint'
-            . '[@baseTableSchemaName="namespace"]'
-            . '[@baseTableName="mytable"]'
-            . '[@constraintName="test"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/dropForeignKeyConstraint'
+                . '[@baseTableSchemaName="namespace"]'
+                . '[@baseTableName="mytable"]'
+                . '[@constraintName="test"]',
             $this->output->getDocument()
         );
     }
@@ -792,11 +814,11 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/dropForeignKeyConstraint'
-            . '[@baseTableSchemaName="namespace"]'
-            . '[@baseTableName="mytable"]'
-            . '[@constraintName="test"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/dropForeignKeyConstraint'
+                . '[@baseTableSchemaName="namespace"]'
+                . '[@baseTableName="mytable"]'
+                . '[@constraintName="test"]',
             $this->output->getDocument()
         );
     }
@@ -826,11 +848,11 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/renameColumn[@schemaName="namespace"]'
-            . '[@tableName="mytable"]'
-            . '[@oldColumnName="oldname"]'
-            . '[@newColumnName="changed"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/renameColumn[@schemaName="namespace"]'
+                . '[@tableName="mytable"]'
+                . '[@oldColumnName="oldname"]'
+                . '[@newColumnName="changed"]',
             $this->output->getDocument()
         );
     }
@@ -863,11 +885,11 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $this->assertXpathMatch(
             '/databaseChangeLog'
-            . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
-            . '/modifyDataType[@schemaName="namespace"]'
-            . '[@tableName="mytable"]'
-            . '[@columnName="notchangedname"]'
-            . '[@newDataType="varchar(10)"]',
+                . '/changeSet[@id="alter-table-mytable"][@author="phpunit"]'
+                . '/modifyDataType[@schemaName="namespace"]'
+                . '[@tableName="mytable"]'
+                . '[@columnName="notchangedname"]'
+                . '[@newDataType="varchar(10)"]',
             $this->output->getDocument()
         );
     }
