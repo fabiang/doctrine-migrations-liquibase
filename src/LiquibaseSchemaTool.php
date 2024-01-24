@@ -87,8 +87,8 @@ class LiquibaseSchemaTool extends SchemaTool
     {
         $output   = $this->sanitizeOutputParameter($output);
         $metadata = $this->sanitizeMetadatas($metadata);
+        $schema   = $this->getSchemaFromMetadata($metadata);
 
-        $schema           = $this->getSchemaFromMetadata($metadata);
         $liquibaseVisitor = new LiquibaseSchemaVisitor($output);
         $output->started($this->em);
         $schema->visit($liquibaseVisitor);

@@ -24,19 +24,19 @@
         }
     },
     "require": {
-        "php": "^7.4 || ~8.0.0 || ~8.1.0 || ~8.2.0",
+        "php": "^7.4 || ~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0",
         "doctrine/orm": "^2.11",
         "doctrine/dbal": "^3.1.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
+        "phpunit/phpunit": "^9.5 || ^10.0",
         "thomasweinert/phpunit-xpath-assertions": "^3.0",
         "phpspec/prophecy-phpunit": "^2.0",
         "vimeo/psalm": "^4.23",
         "doctrine/cache": "^2.1",
         "phpspec/prophecy": "^1.14",
         "laminas/laminas-coding-standard": "^2.3",
-        "doctrine/annotations": "^1.13"
+        "doctrine/annotations": "^1.13 || ^2.0"
     },
     "replace": {
         "toilal/doctrine-migrations-liquibase": "self.version"
