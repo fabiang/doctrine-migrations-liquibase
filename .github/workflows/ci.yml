@@ -1,0 +1,126 @@
+name: Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+  psalm:
+    name: Psalm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Psalm
+        uses: docker://vimeo/psalm-github-actions
+        with:
+          security_analysis: true
+          report_file: results.sarif
+          composer_ignore_platform_reqs: true
+
+      - name: Upload Security Analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+
+      # we may use whatever way to install phpcs, just specify the path on the next step
+      # however, curl seems to be the fastest
+      - name: Install PHP_CodeSniffer
+        run: |
+          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+          php phpcs.phar --version
+      - uses: tinovyatkin/action-php-codesniffer@v1
+        with:
+          files: "**.php" # you may customize glob as needed
+          phpcs_path: php phpcs.phar
+          standard: phpcs.xml
+
+  unittest:
+    name: Unit Tests - PHP ${{ matrix.php.version }} ${{ matrix.prefer-lowest }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # operating-system: [ubuntu-latest, windows-latest, macOS-latest]
+        php:
+          - version: "7.4"
+            composer-args: ""
+          - version: "8.0"
+            composer-args: ""
+          - version: "8.1"
+            composer-args: "--ignore-platform-req=php"
+          - version: "8.2"
+            composer-args: "--ignore-platform-req=php"
+          - version: "8.3"
+            composer-args: "--ignore-platform-req=php"
+        prefer-lowest: ["", "--prefer-lowest"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php.version }}
+          # extensions: intl #optional
+          # ini-values: "post_max_size=256M" #optional
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-progress ${{ matrix.prefer-lowest }} ${{ matrix.php.composer-args }}
+
+      - name: Run test suite
+        run: composer run-script test
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mysql: ["5.7", "8.0"]
+        postgres: ["14", "13", "12", "11", "10", "9"]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.0
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        MYSQL_VERSION: "${{ matrix.mysql }}"
+        POSTGRES_VERSION: "${{ matrix.postgres }}"
+
+    - name: Sleep for 60 seconds
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '60s'
+
+    - name: Run test suite
+      run: composer run-script integration
+
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" down
