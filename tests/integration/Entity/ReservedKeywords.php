@@ -5,83 +5,50 @@ declare(strict_types=1);
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
 use DateTime;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * Foo
- *
- * @ORM\Entity
- * @ORM\Table
- */
+#[ORM\Entity()]
+#[ORM\Table(schema: 'testdb', name: 'ReservedKeywords')]
 class ReservedKeywords
 {
-    /**
-     * @ORM\Id()
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     *
-     * @var int|null
-     */
-    private $id;
+    #[ORM\Id()]
+    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\GeneratedValue(strategy: "IDENTITY")]
+    private ?int $id;
 
-    /**
-     * @ORM\Column(type="date")
-     *
-     * @var DateTime|null
-     */
-    private $from;
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: false)]
+    private ?DateTime $from;
 
-    /**
-     * @ORM\Column(type="datetime")
-     *
-     * @var DateTime|null
-     */
-    private $to;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
+    private ?DateTime $to;
 
-    /**
-     * @return int|null
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * @param int|null $id
-     */
-    public function setId($id)
+    public function setId(?int $id): void
     {
         $this->id = $id;
     }
 
-    /**
-     * @return DateTime|null
-     */
-    public function getFrom()
+    public function getFrom(): ?DateTime
     {
         return $this->from;
     }
 
-    /**
-     * @param DateTime|null $from
-     */
-    public function setFrom($from)
+    public function setFrom(?DateTime $from): void
     {
         $this->from = $from;
     }
 
-    /**
-     * @return DateTime|null
-     */
-    public function getTo()
+    public function getTo(): ?DateTime
     {
         return $this->to;
     }
 
-    /**
-     * @param DateTime|null $to
-     */
-    public function setTo($to)
+    public function setTo(?DateTime $to): void
     {
         $this->to = $to;
     }

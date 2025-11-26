@@ -5,108 +5,66 @@ declare(strict_types=1);
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
 use DateTime;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- * @ORM\Table(indexes={
- *     @ORM\Index(columns={"date"}),
- *     @ORM\Index(columns={"libelle"}),
- *     @ORM\Index(columns={"commentaire"})
- * })
- */
+#[ORM\Entity()]
+#[ORM\Table(schema: 'testdb', name: 'IndexColumns')]
+#[ORM\Index(columns: ['date'])]
+#[ORM\Index(fields: ['libelle'])]
+#[ORM\UniqueConstraint(fields: ['commentaire'])]
 class IndexColumns
 {
-    /**
-     * @ORM\Id()
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     *
-     * @var int|null
-     */
-    private $id;
+    #[ORM\Id()]
+    #[ORM\Column(type: Types::INTEGER)]
+    #[ORM\GeneratedValue(strategy: "IDENTITY")]
+    private ?int $id;
 
-    /**
-     * @ORM\Column(nullable=true, type="date")
-     *
-     * @var DateTime|null
-     */
-    private $date;
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?DateTime $date;
 
-    /**
-     * @ORM\Column(nullable=true)
-     *
-     * @var string|null
-     */
-    private $libelle;
+    #[ORM\Column(type: Types::STRING, nullable: true)]
+    private ?string $libelle;
 
-    /**
-     * @ORM\Column(nullable=true, length=500)
-     *
-     * @var string|null
-     */
-    private $commentaire;
+    #[ORM\Column(type: Types::STRING, nullable: true, length: 500)]
+    private ?string $commentaire;
 
-    /**
-     * @return int|null
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * @param int|null $id
-     */
-    public function setId($id)
+    public function setId(?int $id): void
     {
         $this->id = $id;
     }
 
-    /**
-     * @return DateTime|null
-     */
-    public function getDate()
+    public function getDate(): ?DateTime
     {
         return $this->date;
     }
 
-    /**
-     * @param DateTime|null $date
-     */
-    public function setDate($date)
+    public function setDate(?DateTime $date): void
     {
         $this->date = $date;
     }
 
-    /**
-     * @return null|string
-     */
-    public function getLibelle()
+    public function getLibelle(): ?string
     {
         return $this->libelle;
     }
 
-    /**
-     * @param null|string $libelle
-     */
-    public function setLibelle($libelle)
+    public function setLibelle(?string $libelle): void
     {
         $this->libelle = $libelle;
     }
 
-    /**
-     * @return null|string
-     */
-    public function getCommentaire()
+    public function getCommentaire(): ?string
     {
         return $this->commentaire;
     }
 
-    /**
-     * @param null|string $commentaire
-     */
-    public function setCommentaire($commentaire)
+    public function setCommentaire(?string $commentaire): void
     {
         $this->commentaire = $commentaire;
     }

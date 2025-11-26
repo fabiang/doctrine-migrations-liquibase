@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase;
 
 use Doctrine\ORM\ORMException;
-use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputOptions;
 
 use function getenv;
 
 /**
  * @group docker
  */
-class MySQLTest extends Database\AbstractDatabaseTest
+class MySQLTest extends Database\AbstractDatabaseTestCase
 {
     public function getConnectionParameters(): array
     {
@@ -48,41 +48,40 @@ class MySQLTest extends Database\AbstractDatabaseTest
   <changeSet author="doctrine-migrations-liquibase" id="create-schema-testdb">
     <sql>CREATE SCHEMA `testdb`</sql>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-Bar">
-    <createTable tableName="Bar">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Bar">
+    <createTable schemaName="testdb" tableName="bar">
       <column name="id" type="varchar(255)">
         <constraints primaryKey="true" nullable="false"/>
       </column>
     </createTable>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-Foo">
-    <createTable tableName="Foo">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Foo">
+    <createTable schemaName="testdb" tableName="foo">
       <column name="id" type="int">
         <constraints primaryKey="true" nullable="false"/>
       </column>
     </createTable>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-IndexColumns">
-    <createTable tableName="IndexColumns">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-IndexColumns">
+    <createTable schemaName="testdb" tableName="indexcolumns">
       <column name="id" type="int">
         <constraints primaryKey="true" nullable="false"/>
       </column>
       <column name="date" type="date"/>
       <column name="libelle" type="varchar(255)"/>
-      <column name="commentaire" type="varchar(500)"/>
+      <column name="commentaire" type="varchar(500)">
+        <constraints unique="true" uniqueConstraintName="UNIQ_78B576EA67F068BC"/>
+      </column>
     </createTable>
-    <createIndex tableName="IndexColumns" indexName="IDX_9BEF3AA1AA9E377A">
+    <createIndex tableName="indexcolumns" schemaName="testdb" indexName="IDX_78B576EAAA9E377A">
       <column name="date"/>
     </createIndex>
-    <createIndex tableName="IndexColumns" indexName="IDX_9BEF3AA1A4D60759">
+    <createIndex tableName="indexcolumns" schemaName="testdb" indexName="IDX_78B576EAA4D60759">
       <column name="libelle"/>
     </createIndex>
-    <createIndex tableName="IndexColumns" indexName="IDX_9BEF3AA167F068BC">
-      <column name="commentaire"/>
-    </createIndex>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-ReservedKeywords">
-    <createTable tableName="ReservedKeywords">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-ReservedKeywords">
+    <createTable schemaName="testdb" tableName="reservedkeywords">
       <column name="id" type="int">
         <constraints nullable="false" primaryKey="true"/>
       </column>
@@ -113,41 +112,43 @@ EOT;
         $expected = <<<'EOT'
 <?xml version="1.0"?>
 <databaseChangeLog>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-Bar">
-    <createTable tableName="Bar">
+  <changeSet author="doctrine-migrations-liquibase" id="create-schema-testdb">
+    <sql>CREATE SCHEMA `testdb`</sql>
+  </changeSet>
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Bar">
+    <createTable schemaName="testdb" tableName="bar">
       <column name="id" type="varchar(255)">
         <constraints primaryKey="true" nullable="false"/>
       </column>
     </createTable>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-Foo">
-    <createTable tableName="Foo">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Foo">
+    <createTable schemaName="testdb" tableName="foo">
       <column name="id" type="int">
         <constraints primaryKey="true" nullable="false"/>
       </column>
     </createTable>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-IndexColumns">
-    <createTable tableName="IndexColumns">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-IndexColumns">
+    <createTable schemaName="testdb" tableName="indexcolumns">
       <column name="id" type="int">
         <constraints primaryKey="true" nullable="false"/>
       </column>
       <column name="date" type="date"/>
       <column name="libelle" type="varchar(255)"/>
-      <column name="commentaire" type="varchar(500)"/>
+      <column name="commentaire" type="varchar(500)">
+        <constraints unique="true" uniqueConstraintName="UNIQ_78B576EA67F068BC"/>
+      </column>
     </createTable>
-    <createIndex tableName="IndexColumns" indexName="IDX_9BEF3AA1AA9E377A">
+    <createIndex tableName="indexcolumns" schemaName="testdb" indexName="IDX_78B576EAAA9E377A">
       <column name="date"/>
     </createIndex>
-    <createIndex tableName="IndexColumns" indexName="IDX_9BEF3AA1A4D60759">
+    <createIndex tableName="indexcolumns" schemaName="testdb" indexName="IDX_78B576EAA4D60759">
       <column name="libelle"/>
     </createIndex>
-    <createIndex tableName="IndexColumns" indexName="IDX_9BEF3AA167F068BC">
-      <column name="commentaire"/>
-    </createIndex>
   </changeSet>
-  <changeSet author="doctrine-migrations-liquibase" id="create-table-ReservedKeywords">
-    <createTable tableName="ReservedKeywords">
+  <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-ReservedKeywords">
+    <createTable schemaName="testdb" tableName="reservedkeywords">
       <column name="id" type="int">
         <constraints nullable="false" primaryKey="true"/>
       </column>

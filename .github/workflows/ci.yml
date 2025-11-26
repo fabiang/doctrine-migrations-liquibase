@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Psalm
         uses: docker://vimeo/psalm-github-actions
@@ -18,7 +18,7 @@ jobs:
           composer_ignore_platform_reqs: true
 
       - name: Upload Security Analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
 
@@ -41,19 +41,13 @@ jobs:
       matrix:
         # operating-system: [ubuntu-latest, windows-latest, macOS-latest]
         php:
-          - version: "7.4"
-            composer-args: ""
-          - version: "8.0"
-            composer-args: ""
-          - version: "8.1"
-            composer-args: "--ignore-platform-req=php"
-          - version: "8.2"
-            composer-args: "--ignore-platform-req=php"
           - version: "8.3"
-            composer-args: "--ignore-platform-req=php"
+            composer-args: ""
+          - version: "8.4"
+            composer-args: ""
         prefer-lowest: ["", "--prefer-lowest"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Install PHP
         uses: shivammathur/setup-php@v2
@@ -67,7 +61,7 @@ jobs:
 
       - name: Cache Composer packages
         id: composer-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: vendor
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
@@ -78,26 +72,26 @@ jobs:
         run: composer update --prefer-dist --no-progress ${{ matrix.prefer-lowest }} ${{ matrix.php.composer-args }}
 
       - name: Run test suite
-        run: composer run-script test
+        run: composer run-script unittest
 
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mysql: ["5.7", "8.0"]
-        postgres: ["14", "13", "12", "11", "10", "9"]
+        mysql: ["5.7", "8.4", "9.5"]
+        postgres: ["18", "17", "16", "15", "14"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Install PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: 8.0
+        php-version: 8.4
 
     - name: Cache Composer packages
       id: composer-cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: vendor
         key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
@@ -108,7 +102,7 @@ jobs:
       run: composer update --prefer-dist --no-progress --ignore-platform-reqs
 
     - name: Start containers
-      run: docker-compose -f "docker-compose.yml" up -d --build
+      run: docker compose -f "docker-compose.yml" up -d --build
       env:
         MYSQL_VERSION: "${{ matrix.mysql }}"
         POSTGRES_VERSION: "${{ matrix.postgres }}"
@@ -123,4 +117,4 @@ jobs:
 
     - name: Stop containers
       if: always()
-      run: docker-compose -f "docker-compose.yml" down
+      run: docker compose -f "docker-compose.yml" down

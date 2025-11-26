@@ -4,33 +4,33 @@ declare(strict_types=1);
 
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Database;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\PDO;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\AttributeDriver;
 use Doctrine\ORM\ORMException;
-use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions;
 use Fabiang\Doctrine\Migrations\Liquibase\LiquibaseSchemaTool;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputOptions;
 use PHPUnit\Framework\TestCase;
 
 use function dirname;
 use function extension_loaded;
-use function join;
+use function implode;
 use function sprintf;
 use function sys_get_temp_dir;
 
-abstract class AbstractDatabaseTest extends TestCase
+abstract class AbstractDatabaseTestCase extends TestCase
 {
-    /** @var EntityManager */
-    protected $em;
-
-    /** @var array */
-    protected $databaseState = [];
+    protected EntityManager $em;
+    protected array $databaseState = [];
 
     abstract protected function getConnectionParameters(): array;
 
     abstract protected function getEntitiesPath(): string;
 
     /**
-     * Setup database;
+     * Setup database
      */
     protected function setUpDatabase(): void
     {
@@ -76,11 +76,10 @@ abstract class AbstractDatabaseTest extends TestCase
         $config->setProxyDir(sys_get_temp_dir());
         $config->setProxyNamespace('Fabiang\Doctrine\Migrations\Liquibase\Proxies');
 
-        //$config->setQueryCacheImpl(new ArrayCache());
-        //$config->setMetadataCacheImpl(new ArrayCache());
+        $path       = implode('/', [dirname(__FILE__), '..', $this->getEntitiesPath()]);
+        $driverImpl = new AttributeDriver([$path]);
 
-        $driver = $config->newDefaultAnnotationDriver([join('/', [dirname(__FILE__), '..', $this->getEntitiesPath()])], false);
-        $config->setMetadataDriverImpl($driver);
+        $config->setMetadataDriverImpl($driverImpl);
 
         $params = $this->getConnectionParameters();
 
@@ -88,7 +87,27 @@ abstract class AbstractDatabaseTest extends TestCase
             return;
         }
 
-        $this->em = EntityManager::create($params, $config);
+        $driver = null;
+        switch ($params['driver']) {
+            case 'pdo_mysql':
+                $driver = new PDO\MySQL\Driver();
+                break;
+
+            case 'pdo_pgsql':
+                $driver = new PDO\PgSQL\Driver();
+                break;
+
+            case 'pdo_sqlite':
+                $driver = new PDO\SQLite\Driver();
+                break;
+
+            default:
+                $this->markTestSkipped('Unsupported driver');
+                break;
+        }
+
+        $conn     = new Connection($params, $driver);
+        $this->em = new EntityManager($conn, $config);
     }
 
     /**

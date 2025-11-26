@@ -8,16 +8,24 @@ use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\SchemaDiff;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Tools\SchemaTool;
 use DOMDocument;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseDOMDocumentOutput;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputInterface;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputOptions;
 
 use function strcmp;
 use function usort;
 
+/**
+ * @psalm-suppress UnusedClass
+ */
 class LiquibaseSchemaTool extends SchemaTool
 {
+    private const array LIQUIBASE_TABLES = ['liquibase', 'liquibase_lock'];
+
     private EntityManagerInterface $em;
 
     public function __construct(EntityManagerInterface $em)
@@ -27,137 +35,143 @@ class LiquibaseSchemaTool extends SchemaTool
     }
 
     /**
-     * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
-     */
-    private function sanitizeOutputParameter(?object $output = null): LiquibaseOutput
-    {
-        if ($output instanceof LiquibaseOutputOptions) {
-            return new LiquibaseDOMDocumentOutput($output);
-        } elseif ($output instanceof LiquibaseOutput) {
-            return $output;
-        }
-        return new LiquibaseDOMDocumentOutput();
-    }
-
-    private function sanitizeMetadatas(?array $metadata = null): array
-    {
-        if (! $metadata) {
-            $metadata = $this->em->getMetadataFactory()->getAllMetadata();
-        }
-        usort($metadata, function (ClassMetadata $a, ClassMetadata $b) {
-            return strcmp($a->getName(), $b->getName());
-        });
-        return $metadata;
-    }
-
-    /**
      * Generate a diff changelog from differences between actual database state and doctrine metadata.
      *
-     * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
-     * @param array|null $metadata
-     * @return DOMDocument|mixed
      * @throws ORMException
      */
-    public function diffChangeLog(?object $output = null, ?array $metadata = null)
-    {
-        $output   = $this->sanitizeOutputParameter($output);
-        $metadata = $this->sanitizeMetadatas($metadata);
+    public function diffChangeLog(
+        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null,
+        ?array $metadata = null
+    ): DOMDocument {
+        $soutput   = $this->sanitizeOutputParameter($output);
+        $smetadata = $this->sanitizeMetadatas($metadata);
+        $platform  = $this->em->getConnection()->getDatabasePlatform();
 
-        $sm = $this->em->getConnection()->getSchemaManager();
+        $sm = $this->em->getConnection()->createSchemaManager();
 
-        $fromSchema = $sm->createSchema();
+        $fromSchema = $sm->introspectSchema();
         $this->removeLiquibaseTables($fromSchema);
-        $toSchema = $this->getSchemaFromMetadata($metadata);
+        $toSchema = $this->getSchemaFromMetadata($smetadata);
 
-        $comparator = new Comparator();
-        $schemaDiff = $comparator->compare($fromSchema, $toSchema);
+        /**
+         * @psalm-suppress InternalMethod Comparator is marked as internal, but we need it
+         */
+        $comparator = new Comparator($platform);
+        $schemaDiff = $comparator->compareSchemas($fromSchema, $toSchema);
 
-        return $this->diffChangeLogFromSchemaDiff($schemaDiff, $output);
+        return $this->diffChangeLogFromSchemaDiff($schemaDiff, $soutput);
     }
 
     /**
      * Generate a full changelog from doctrine metadata.
      *
-     * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
-     * @param array|null $metadata
-     * @return DOMDocument|mixed
      * @throws ORMException
      */
-    public function changeLog($output = null, $metadata = null)
-    {
-        $output   = $this->sanitizeOutputParameter($output);
-        $metadata = $this->sanitizeMetadatas($metadata);
-        $schema   = $this->getSchemaFromMetadata($metadata);
+    public function changeLog(
+        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null,
+        ?array $metadata = null
+    ): DOMDocument {
+        $soutput   = $this->sanitizeOutputParameter($output);
+        $smetadata = $this->sanitizeMetadatas($metadata);
+        $toSchema  = $this->getSchemaFromMetadata($smetadata);
+        $platform  = $this->em->getConnection()->getDatabasePlatform();
 
-        $liquibaseVisitor = new LiquibaseSchemaVisitor($output);
-        $output->started($this->em);
-        $schema->visit($liquibaseVisitor);
-        $output->terminated();
+        $fromSchema = new Schema();
+        /**
+         * @psalm-suppress InternalMethod Comparator is marked as internal, but we need it
+         */
+        $comparator = new Comparator($platform);
+        $schemaDiff = $comparator->compareSchemas($fromSchema, $toSchema);
 
-        return $output->getResult();
+        return $this->diffChangeLogFromSchemaDiff($schemaDiff, $soutput);
     }
 
     /**
      * Generate a diff changelog from SchemaDiff object.
-     *
-     * @param LiquibaseOutput|LiquibaseOutputOptions|null $output
-     * @return DOMDocument|mixed
      */
-    public function diffChangeLogFromSchemaDiff(SchemaDiff $schemaDiff, ?object $output = null)
-    {
-        $output = $this->sanitizeOutputParameter($output);
+    public function diffChangeLogFromSchemaDiff(
+        SchemaDiff $schemaDiff,
+        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null
+    ): DOMDocument {
+        $soutput = $this->sanitizeOutputParameter($output);
 
-        $output->started($this->em);
+        $soutput->started($this->em);
 
-        foreach ($schemaDiff->newNamespaces as $newNamespace) {
-            $output->createSchema($newNamespace);
+        foreach ($schemaDiff->getCreatedSchemas() as $newNamespace) {
+            $soutput->createSchema($newNamespace);
         }
 
-        foreach ($schemaDiff->orphanedForeignKeys as $orphanedForeignKey) {
-            $output->dropForeignKey($orphanedForeignKey, $orphanedForeignKey->getLocalTable());
+        foreach ($schemaDiff->getAlteredSequences() as $sequence) {
+            $soutput->alterSequence($sequence);
         }
 
-        foreach ($schemaDiff->changedSequences as $sequence) {
-            $output->alterSequence($sequence);
+        foreach ($schemaDiff->getDroppedSequences() as $sequence) {
+            $soutput->dropSequence($sequence);
         }
 
-        foreach ($schemaDiff->removedSequences as $sequence) {
-            $output->dropSequence($sequence);
+        foreach ($schemaDiff->getCreatedSequences() as $sequence) {
+            $soutput->createSequence($sequence);
         }
 
-        foreach ($schemaDiff->newSequences as $sequence) {
-            $output->createSequence($sequence);
-        }
-
-        foreach ($schemaDiff->newTables as $table) {
-            $output->createTable($table);
+        foreach ($schemaDiff->getCreatedTables() as $table) {
+            $soutput->createTable($table);
 
             foreach ($table->getForeignKeys() as $foreignKey) {
-                $output->createForeignKey($foreignKey, $table);
+                $soutput->createForeignKey($foreignKey, $table);
             }
         }
 
-        foreach ($schemaDiff->removedTables as $table) {
-            $output->dropTable($table);
+        foreach ($schemaDiff->getDroppedTables() as $table) {
+            $soutput->dropTable($table);
         }
 
-        foreach ($schemaDiff->changedTables as $tableDiff) {
-            $output->alterTable($tableDiff);
+        foreach ($schemaDiff->getAlteredTables() as $tableDiff) {
+            $soutput->alterTable($tableDiff);
+
+            foreach ($tableDiff->getDroppedForeignKeys() as $foreignKey) {
+                $soutput->dropForeignKey($foreignKey, $tableDiff->getOldTable());
+            }
         }
 
-        $output->terminated();
+        $soutput->terminated();
 
-        return $output->getResult();
+        return $soutput->getResult();
     }
 
     private function removeLiquibaseTables(Schema $fromSchema): void
     {
-        // TODO: Make those table names configurable
-        if ($fromSchema->hasTable('liquibase')) {
-            $fromSchema->dropTable('liquibase');
+        foreach (self::LIQUIBASE_TABLES as $table) {
+            if ($fromSchema->hasTable($table)) {
+                $fromSchema->dropTable($table);
+            }
         }
-        if ($fromSchema->hasTable('liquibase_lock')) {
-            $fromSchema->dropTable('liquibase_lock');
+    }
+
+    private function sanitizeOutputParameter(
+        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null
+    ): LiquibaseOutputInterface {
+        if ($output instanceof LiquibaseOutputOptions) {
+            return new LiquibaseDOMDocumentOutput($output);
+        } elseif ($output instanceof LiquibaseOutputInterface) {
+            return $output;
         }
+
+        return new LiquibaseDOMDocumentOutput();
+    }
+
+    /**
+     * @return list<ClassMetadata<object>>
+     */
+    private function sanitizeMetadatas(?array $metadata = null): array
+    {
+        if (! $metadata) {
+            $metadata = $this->em->getMetadataFactory()->getAllMetadata();
+        }
+
+        usort($metadata, function (ClassMetadata $a, ClassMetadata $b) {
+            return strcmp($a->getName(), $b->getName());
+        });
+
+        return $metadata;
     }
 }
