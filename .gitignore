@@ -1,5 +1,7 @@
 .idea/
 *.iml
+*.bak
+*.orig
 composer.lock
 vendor/
 phpunit.xml

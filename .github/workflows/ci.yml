@@ -41,16 +41,10 @@ jobs:
       matrix:
         # operating-system: [ubuntu-latest, windows-latest, macOS-latest]
         php:
-          - version: "7.4"
-            composer-args: ""
-          - version: "8.0"
-            composer-args: ""
-          - version: "8.1"
-            composer-args: "--ignore-platform-req=php"
-          - version: "8.2"
-            composer-args: "--ignore-platform-req=php"
           - version: "8.3"
-            composer-args: "--ignore-platform-req=php"
+            composer-args: ""
+          - version: "8.4"
+            composer-args: ""
         prefer-lowest: ["", "--prefer-lowest"]
     steps:
       - uses: actions/checkout@v3
@@ -85,15 +79,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mysql: ["5.7", "8.0"]
-        postgres: ["14", "13", "12", "11", "10", "9"]
+        mysql: ["5.7", "8.4", "9.5"]
+        postgres: ["18", "17", "16", "15", "14"]
     steps:
     - uses: actions/checkout@v3
 
     - name: Install PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: 8.0
+        php-version: 8.4
 
     - name: Cache Composer packages
       id: composer-cache

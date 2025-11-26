@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase\DBAL;
 
-use Doctrine\DBAL\Schema\AbstractAsset;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 
@@ -27,10 +28,9 @@ final class QualifiedNameTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::fromQualifiedName
      */
-    public function fromQualifiedName(): void
+    public function testFromQualifiedName(): void
     {
         $object = QualifiedName::fromQualifiedName('namespace.name');
         $this->assertSame('name', $object->getName());
@@ -38,10 +38,9 @@ final class QualifiedNameTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::fromQualifiedName
      */
-    public function fromQualifiedNameWithoutNamespace(): void
+    public function testFromQualifiedNameWithoutNamespace(): void
     {
         $object = QualifiedName::fromQualifiedName('name');
         $this->assertSame('name', $object->getName());
@@ -49,12 +48,11 @@ final class QualifiedNameTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::fromAsset
      */
-    public function fromAsset(): void
+    public function testFromAsset(): void
     {
-        $asset = $this->prophesize(AbstractAsset::class);
+        $asset = $this->prophesize(ForeignKeyConstraint::class);
         $asset->getNamespaceName()->shouldBeCalled()->willReturn('namespace');
         $asset->getShortestName('namespace')->shouldBeCalled()->willReturn('name');
 
@@ -64,12 +62,11 @@ final class QualifiedNameTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::fromAsset
      */
-    public function fromAssetEmptyNamespace(): void
+    public function testFromAssetEmptyNamespace(): void
     {
-        $asset = $this->prophesize(AbstractAsset::class);
+        $asset = $this->prophesize(Column::class);
         $asset->getNamespaceName()->shouldBeCalled()->willReturn('');
         $asset->getName()->shouldBeCalled()->willReturn('name');
 
@@ -79,12 +76,11 @@ final class QualifiedNameTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::__construct
      * @covers ::getNamespaceName
      * @covers ::getName
      */
-    public function constructorAndGetters(): void
+    public function testConstructorAndGetters(): void
     {
         $this->assertSame('name', $this->object->getName());
         $this->assertSame('namespace', $this->object->getNamespaceName());

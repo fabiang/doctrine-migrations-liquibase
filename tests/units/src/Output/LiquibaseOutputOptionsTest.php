@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
 
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -26,7 +26,6 @@ final class LiquibaseOutputOptionsTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::isUsePlatformTypes
      * @covers ::setUsePlatformTypes
      * @covers ::isChangeSetUniqueId
@@ -34,7 +33,7 @@ final class LiquibaseOutputOptionsTest extends TestCase
      * @covers ::getChangeSetAuthor
      * @covers ::setChangeSetAuthor
      */
-    public function setterAndGetter(): void
+    public function testSetterAndGetter(): void
     {
         $this->assertFalse($this->object->isUsePlatformTypes());
         $this->object->setUsePlatformTypes(true);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase\DBAL;
 
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
@@ -17,14 +17,13 @@ final class IndexColumnsTest extends TestCase
     use ProphecyTrait;
 
     /**
-     * @test
      * @covers ::__construct
      * @covers ::getPrimaryColumns
      * @covers ::getPrimaryKeyColumns
      * @covers ::getUniqueColumns
      * @covers ::getOtherIndexes
      */
-    public function noIndexColumnsPassed(): void
+    public function testNoIndexColumnsPassed(): void
     {
         $table = $this->prophesize(Table::class);
         $table->getIndexes()
@@ -40,14 +39,13 @@ final class IndexColumnsTest extends TestCase
     }
 
     /**
-     * @test
      * @covers ::__construct
      * @covers ::getPrimaryColumns
      * @covers ::getPrimaryKeyColumns
      * @covers ::getUniqueColumns
      * @covers ::getOtherIndexes
      */
-    public function indexesArePassed(): void
+    public function testIndexesArePassed(): void
     {
         $primaryIndex1 = new Index('primary1', ['test1', 'test2'], false, true);
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
 
 class LiquibaseOutputOptions
 {
@@ -15,6 +15,9 @@ class LiquibaseOutputOptions
         return $this->usePlatformTypes;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     */
     public function setUsePlatformTypes(bool $usePlatformTypes): self
     {
         $this->usePlatformTypes = $usePlatformTypes;
@@ -26,6 +29,9 @@ class LiquibaseOutputOptions
         return $this->changeSetUniqueId;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     */
     public function setChangeSetUniqueId(bool $changeSetUniqueId): self
     {
         $this->changeSetUniqueId = $changeSetUniqueId;
@@ -37,6 +43,9 @@ class LiquibaseOutputOptions
         return $this->changeSetAuthor;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     */
     public function setChangeSetAuthor(string $changeSetAuthor): self
     {
         $this->changeSetAuthor = $changeSetAuthor;

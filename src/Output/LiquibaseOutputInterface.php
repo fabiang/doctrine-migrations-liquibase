@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
 
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Sequence;
@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\ORM\EntityManagerInterface;
 
-interface LiquibaseOutput
+interface LiquibaseOutputInterface
 {
     public function createSchema(string $newNamespace): void;
 
@@ -34,8 +34,5 @@ interface LiquibaseOutput
 
     public function terminated(): void;
 
-    /**
-     * @return mixed
-     */
-    public function getResult();
+    public function getResult(): mixed;
 }

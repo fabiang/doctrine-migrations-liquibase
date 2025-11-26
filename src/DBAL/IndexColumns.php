@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase;
+namespace Fabiang\Doctrine\Migrations\Liquibase\DBAL;
 
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
@@ -38,6 +38,7 @@ class IndexColumns
 
     /**
      * @return string[]
+     * @psalm-suppress PossiblyUnusedMethod
      */
     public function getPrimaryColumns(): array
     {

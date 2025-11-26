@@ -4,36 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * Foo
- *
- * @ORM\Entity
- * @ORM\Table
- */
+#[ORM\Entity()]
+#[ORM\Table(schema: 'testdb', name: 'Bar')]
 class Bar
 {
-    /**
-     * @ORM\Id()
-     * @ORM\Column(type="string")
-     *
-     * @var string|null
-     */
-    private $id;
+    #[ORM\Id()]
+    #[ORM\Column(type: Types::STRING)]
+    private ?string $id;
 
-    /**
-     * @return null|string
-     */
-    public function getId()
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    /**
-     * @param null|string $id
-     */
-    public function setId($id)
+    public function setId(?string $id): void
     {
         $this->id = $id;
     }
