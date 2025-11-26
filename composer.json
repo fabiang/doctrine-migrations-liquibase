@@ -36,7 +36,8 @@
         "doctrine/cache": "^2.1",
         "phpspec/prophecy": "^1.14",
         "laminas/laminas-coding-standard": "^2.3",
-        "doctrine/annotations": "^1.13 || ^2.0"
+        "doctrine/annotations": "^1.13 || ^2.0",
+        "squizlabs/php_codesniffer": "^3.13"
     },
     "replace": {
         "toilal/doctrine-migrations-liquibase": "self.version"
