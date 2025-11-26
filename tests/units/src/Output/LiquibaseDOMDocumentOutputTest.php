@@ -833,8 +833,6 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $columnDiff1 = new ColumnDiff($columnOld, $columnNew);
 
-        $columnDiff1->changedProperties = ['type'];
-
         $tableDiff = new TableDiff(
             oldTable: $table->reveal(),
             changedColumns: ['notchangedname' => $columnDiff1],
