@@ -102,7 +102,7 @@ jobs:
       run: composer update --prefer-dist --no-progress --ignore-platform-reqs
 
     - name: Start containers
-      run: docker-compose -f "docker-compose.yml" up -d --build
+      run: docker compose -f "docker-compose.yml" up -d --build
       env:
         MYSQL_VERSION: "${{ matrix.mysql }}"
         POSTGRES_VERSION: "${{ matrix.postgres }}"
@@ -117,4 +117,4 @@ jobs:
 
     - name: Stop containers
       if: always()
-      run: docker-compose -f "docker-compose.yml" down
+      run: docker compose -f "docker-compose.yml" down
