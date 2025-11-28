@@ -16,6 +16,7 @@ use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseDOMDocumentOutput;
 use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputInterface;
 use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputOptions;
 
+use function array_merge;
 use function strcmp;
 use function usort;
 
@@ -26,12 +27,12 @@ class LiquibaseSchemaTool extends SchemaTool
 {
     private const array LIQUIBASE_TABLES = ['liquibase', 'liquibase_lock'];
 
-    private EntityManagerInterface $em;
-
-    public function __construct(EntityManagerInterface $em)
+    /**
+     * @param string[] $ignoreTables
+     */
+    public function __construct(private EntityManagerInterface $em, private array $ignoreTables = [])
     {
         parent::__construct($em);
-        $this->em = $em;
     }
 
     /**
@@ -140,7 +141,9 @@ class LiquibaseSchemaTool extends SchemaTool
 
     private function removeLiquibaseTables(Schema $fromSchema): void
     {
-        foreach (self::LIQUIBASE_TABLES as $table) {
+        $tables = array_merge(self::LIQUIBASE_TABLES, $this->ignoreTables);
+
+        foreach ($tables as $table) {
             if ($fromSchema->hasTable($table)) {
                 $fromSchema->dropTable($table);
             }

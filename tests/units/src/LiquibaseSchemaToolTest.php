@@ -273,6 +273,7 @@ final class LiquibaseSchemaToolTest extends TestCase
         $foreignKey1->getReferencingColumnNames()->willReturn([UnqualifiedName::unquoted('foo')]);
 
         $foreignKey2 = $this->prophesize(ForeignKeyConstraint::class);
+        $foreignKey2->getName()->willReturn('testfk2');
 
         $table1 = new Table(
             name: 'tablename1',

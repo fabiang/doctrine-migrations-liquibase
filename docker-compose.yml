@@ -1,7 +1,6 @@
 # This docker-compose should be up to run tests
-version: "3"
 services:
-  postgres:
+  postgresql:
     image: postgres:${POSTGRES_VERSION:-13}-alpine
     container_name: doctrine-migration-liquibase-postgres
     environment:
@@ -9,7 +8,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-test}
       - POSTGRES_DB=${POSTGRES_DB:-testdb}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
 
   mysql:
     image: mysql:${MYSQL_VERSION:-5.7}
@@ -20,9 +19,29 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-test}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-testdb}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     ulimits:
       nproc: 65535
       nofile:
         soft: 26677
         hard: 46677
+
+  mariadb:
+    image: mariadb:${MARIADB_VERSION:-11}
+    container_name: doctrine-migration-liquibase-mariadb
+    environment:
+      - MARIADB_ROOT_PASSWORD=test
+      - MARIADB_USER=${MARIADB_USER:-test}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD:-test}
+      - MARIADB_DATABASE=${MARIADB_DATABASE:-testdb}
+    ports:
+      - "${MARIADB_PORT:-3307}:3306"
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:${MSSQL_VERSION:-2022}-latest
+    container_name: doctrine-migration-liquibase-mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_PASSWORD:-superAdmin123%}
+    ports:
+      - "${MSSQL_PORT:-1433}:1433"

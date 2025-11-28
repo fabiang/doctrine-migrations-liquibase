@@ -74,13 +74,97 @@ jobs:
       - name: Run test suite
         run: composer run-script unittest
 
-  integration:
-    name: Integration Tests
+  integration-mssql:
+    name: Integration Tests (MSSQL)
     runs-on: ubuntu-latest
+    env:
+      MSSQL_DRIVER: pdo_sqlsrv
+      MSSQL_HOST: localhost
+      MSSQL_PORT: 1433
+      MSSQL_DATABASE: master
+      MSSQL_USER: sa
+      MSSQL_PASSWORD: superAdmin123%
+
     strategy:
       matrix:
-        mysql: ["5.7", "8.4", "9.5"]
-        postgres: ["18", "17", "16", "15", "14"]
+        mssql: ["2022"]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: Yarden-zamir/install-mssql-odbc@main
+      with:
+        ODBC_VERSION: 18
+        DISTRO: Ubuntu
+        REMOVE_EXITS: true
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+        extensions: pdo_sqlsrv
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v4
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+
+    - name: Start containers
+      run: docker compose -f "docker-compose.yml" up -d --build mssql
+      env:
+        MSSQL_VERSION: "${{ matrix.mssql }}"
+
+    - name: Wait for SQLServer to become available
+      uses: iFaxity/wait-on-action@v1.2.1
+      with:
+        resource: tcp:localhost:1433
+        delay: 60000
+        timeout: 1800000
+        interval: 5000
+        log: true
+
+    - name: Test DB Connection
+      id: wait_for_server
+      run: |
+        docker compose exec mssql \
+          /opt/mssql-tools18/bin/sqlcmd -b -C -S $MSSQL_HOST,$MSSQL_PORT -U $MSSQL_USER \
+            -P $MSSQL_PASSWORD -d $MSSQL_DATABASE -Q 'SELECT @@VERSION'
+
+    - name: Run test suite
+      id: integration_tests
+      run: composer run-script -- integration --tags mssql
+
+    - name: Server logs
+      if: always() && (steps.wait_for_server.outcome == 'failure' || steps.integration_tests.outcome == 'failure')
+      run: docker compose -f "docker-compose.yml" logs mssql
+
+    - name: Stop containers
+      if: always()
+      run: docker compose -f "docker-compose.yml" down --volumes --remove-orphans
+
+  integration-mysql:
+    name: Integration Tests (MySQL)
+    runs-on: ubuntu-latest
+    env:
+      MYSQL_DRIVER: pdo_mysql
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: testdb
+      MYSQL_CHARSET: utf8
+
+    strategy:
+      matrix:
+        mysql: ["9.5", "8.4", "5.7"]
+
     steps:
     - uses: actions/checkout@v6
 
@@ -102,19 +186,173 @@ jobs:
       run: composer update --prefer-dist --no-progress --ignore-platform-reqs
 
     - name: Start containers
-      run: docker compose -f "docker-compose.yml" up -d --build
+      run: docker compose -f "docker-compose.yml" up -d --build mysql
       env:
         MYSQL_VERSION: "${{ matrix.mysql }}"
-        POSTGRES_VERSION: "${{ matrix.postgres }}"
 
-    - name: Sleep for 60 seconds
-      uses: jakejarvis/wait-action@master
+    - name: Wait for MySQL to become available
+      uses: iFaxity/wait-on-action@v1.2.1
       with:
-        time: '60s'
+        resource: tcp:localhost:3306
+        delay: 30000
+        timeout: 1800000
+        interval: 5000
+        log: true
+
+    - name: Test DB Connection
+      id: wait_for_server
+      run: |
+        docker compose exec mysql \
+          mysql --host=$MYSQL_HOST --port=$MYSQL_PORT --user=$MYSQL_USER \
+            --password=$MYSQL_PASSWORD --database=$MYSQL_DATABASE -e 'SELECT VERSION()'
 
     - name: Run test suite
-      run: composer run-script integration
+      id: integration_tests
+      run: composer run-script -- integration --tags mysql
+
+    - name: Server logs
+      if: always() && (steps.wait_for_server.outcome == 'failure' || steps.integration_tests.outcome == 'failure')
+      run: docker compose -f "docker-compose.yml" logs mysql
 
     - name: Stop containers
       if: always()
-      run: docker compose -f "docker-compose.yml" down
+      run: docker compose -f "docker-compose.yml" down --volumes --remove-orphans
+
+  integration-mariadb:
+    name: Integration Tests (MariaDB)
+    runs-on: ubuntu-latest
+    env:
+      MARIADB_DRIVER: pdo_mysql
+      MARIADB_HOST: 127.0.0.1
+      MARIADB_PORT: 3306
+      MARIADB_USER: test
+      MARIADB_PASSWORD: test
+      MARIADB_DATABASE: testdb
+      MARIADB_CHARSET: utf8
+
+    strategy:
+      matrix:
+        mariadb: ["12", "11"]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v4
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+
+    - name: Start containers
+      run: docker compose -f "docker-compose.yml" up -d --build mariadb
+      env:
+        MARIADB_VERSION: "${{ matrix.mariadb }}"
+
+    - name: Wait for MariaDB to become available
+      uses: iFaxity/wait-on-action@v1.2.1
+      with:
+        resource: tcp:localhost:3306
+        delay: 30000
+        timeout: 1800000
+        interval: 5000
+        log: true
+
+    - name: Test DB Connection
+      id: wait_for_server
+      run: |
+        docker compose exec mariadb \
+          mariadb --host=$MARIADB_HOST --port=$MARIADB_PORT --user=$MARIADB_USER \
+            --password=$MARIADB_PASSWORD --database=$MARIADB_DATABASE -e 'SELECT VERSION()'
+
+    - name: Run test suite
+      id: integration_tests
+      run: composer run-script -- integration --tags mariadb
+
+    - name: Server logs
+      if: always() && (steps.wait_for_server.outcome == 'failure' || steps.integration_tests.outcome == 'failure')
+      run: docker compose -f "docker-compose.yml" logs mariadb
+
+    - name: Stop containers
+      if: always()
+      run: docker compose -f "docker-compose.yml" down --volumes --remove-orphans
+
+  integration-postgresql:
+    name: Integration Tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DRIVER: pdo_pgsql
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: testdb
+
+    strategy:
+      matrix:
+        postgres: ["18", "17", "16", "15", "14"]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.4
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v4
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+
+    - name: Start containers
+      run: docker compose -f "docker-compose.yml" up -d --build postgresql
+      env:
+        POSTGRES_VERSION: "${{ matrix.postgres }}"
+
+    - name: Wait for PostgreSQL to become available
+      uses: iFaxity/wait-on-action@v1.2.1
+      with:
+        resource: tcp:localhost:5432
+        delay: 30000
+        timeout: 1800000
+        interval: 5000
+        log: true
+
+    - name: Test DB Connection
+      id: wait_for_server
+      env:
+        PGPASSWORD: $POSTGRES_PASSWORD
+      run: |
+        docker compose exec postgresql \
+          psql --host=$POSTGRES_HOST --port=$POSTGRES_PORT --username=$POSTGRES_USER  \
+            --dbname=$POSTGRES_DB -c 'SELECT VERSION()'
+
+    - name: Run test suite
+      id: integration_tests
+      run: composer run-script -- integration --tags postgresql
+
+    - name: Server logs
+      if: always() && (steps.wait_for_server.outcome == 'failure' || steps.integration_tests.outcome == 'failure')
+      run: docker compose -f "docker-compose.yml" logs postgresql
+
+    - name: Stop containers
+      if: always()
+      run: docker compose -f "docker-compose.yml" down --volumes --remove-orphans
