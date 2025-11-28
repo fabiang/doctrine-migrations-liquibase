@@ -20,7 +20,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\Fabiang\\Doctrine\\Migrations\\Liquibase\\": "tests/integration/"
+            "Fabiang\\Doctrine\\Migrations\\Liquibase\\": "tests/features/bootstrap",
+            "Fabiang\\Doctrine\\Migrations\\Liquibase\\Entity\\": "tests/features/Entitiy"
         }
     },
     "require": {
@@ -32,20 +33,23 @@
         "phpunit/phpunit": "^12.4",
         "thomasweinert/phpunit-xpath-assertions": "^4.0",
         "phpspec/prophecy-phpunit": "^2.0",
-        "vimeo/psalm": "*",
+        "vimeo/psalm": "^6",
         "doctrine/cache": "^2.1",
         "phpspec/prophecy": "^1.14",
         "laminas/laminas-coding-standard": "^2.5",
         "doctrine/annotations": "^1.13 || ^2.0",
-        "squizlabs/php_codesniffer": "^3.13"
+        "squizlabs/php_codesniffer": "^3.13",
+        "behat/behat": "^3.27",
+        "webmozart/assert": "^1.12",
+        "symfony/var-exporter": "^6"
     },
     "replace": {
         "toilal/doctrine-migrations-liquibase": "self.version"
     },
     "scripts": {
         "lint": "psalm --no-cache",
-        "unittest": "phpunit --testsuite=unit",
-        "integration": "phpunit --testsuite=integration", 
+        "unittest": "phpunit",
+        "integration": "behat",
         "test": [
             "phpcs",
             "@lint",

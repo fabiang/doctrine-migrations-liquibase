@@ -77,6 +77,21 @@ jobs:
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_DRIVER: pdo_pgsql
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: testdb
+      MYSQL_DRIVER: pdo_mysql
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: testdb
+      MYSQL_VERSION: 5.7
+      MYSQL_CHARSET: utf8
     strategy:
       matrix:
         mysql: ["5.7", "8.4", "9.5"]
@@ -88,6 +103,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: 8.4
+        extensions: pdo_sqlsrv
 
     - name: Cache Composer packages
       id: composer-cache

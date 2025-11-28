@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Fabiang\Doctrine\Migrations\Liquibase\Entity;
+namespace Fabiang\Doctrine\Migrations\Liquibase\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
