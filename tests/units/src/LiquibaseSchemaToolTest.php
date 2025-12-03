@@ -13,10 +13,8 @@ use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\SchemaConfig;
-use Doctrine\DBAL\Schema\SchemaDiff;
 use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Types\IntegerType;
 use Doctrine\ORM\Configuration as EMConfig;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +23,7 @@ use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Tools\ToolEvents;
 use DOMDocument;
+use Fabiang\Doctrine\Migrations\Liquibase\Helper\VersionHelper;
 use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -39,6 +38,8 @@ use Prophecy\Prophecy\ObjectProphecy;
 final class LiquibaseSchemaToolTest extends TestCase
 {
     use ProphecyTrait;
+    use SchemaDiffTrait;
+    use TableDiffTrait;
 
     private LiquibaseSchemaTool $object;
     private ObjectProphecy $em;
@@ -270,7 +271,15 @@ final class LiquibaseSchemaToolTest extends TestCase
         $foreignKey1 = $this->prophesize(ForeignKeyConstraint::class);
         $foreignKey1->getName()->willReturn('testfk');
         $foreignKey1->getLocalColumns()->willReturn(['foo']); // Deprecated, but still in use
-        $foreignKey1->getReferencingColumnNames()->willReturn([UnqualifiedName::unquoted('foo')]);
+
+        if (VersionHelper::isDBALVersion4()) {
+            $foreignKey1->getReferencingColumnNames()->willReturn([UnqualifiedName::unquoted('foo')]);
+        } else {
+            $localTable = $this->prophesize(Table::class);
+            $foreignKey1->getLocalTable()->willReturn($localTable->reveal());
+            $foreignKey1->setLocalTable(Argument::type(Table::class))->shouldBeCalled();
+            $foreignKey1->getColumns()->willReturn(['foo']);
+        }
 
         $foreignKey2 = $this->prophesize(ForeignKeyConstraint::class);
         $foreignKey2->getName()->willReturn('testfk2');
@@ -299,7 +308,7 @@ final class LiquibaseSchemaToolTest extends TestCase
 
         $output->dropTable($table3)->shouldBeCalled();
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table2,
             addedColumns: [new Column('test', new IntegerType())],
             droppedForeignKeys: [$foreignKey2->reveal()],
@@ -307,7 +316,10 @@ final class LiquibaseSchemaToolTest extends TestCase
 
         $output->alterTable($tableDiff)->shouldBeCalled();
 
-        $schemaDiff = new SchemaDiff(
+        $schema = new Schema();
+
+        $schemaDiff = $this->schemaDiff(
+            fromSchema: $schema,
             createdSchemas: ['newnamespace'],
             droppedSchemas: ['test'],
             createdTables: [$table1],

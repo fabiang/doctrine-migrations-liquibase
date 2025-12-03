@@ -55,7 +55,7 @@ abstract class AbstractDBContext implements Context
         $conn     = new Connection($params, $this->createDriver());
         $this->em = new EntityManager($conn, $config);
 
-        Assert::notEmpty($conn->getServerVersion(), 'Could not connect to database');
+        Assert::notEmpty($conn->fetchOne('SELECT 1'), 'Could not connect to database');
         Assert::true($conn->isConnected(), 'Database is not connected');
     }
 

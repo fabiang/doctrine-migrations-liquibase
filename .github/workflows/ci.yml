@@ -88,6 +88,7 @@ jobs:
     strategy:
       matrix:
         mssql: ["2022"]
+        composer_args: ["", "--prefer-lowest"]
 
     steps:
     - uses: actions/checkout@v6
@@ -114,7 +115,7 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install dependencies
-      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs ${{ matrix.composer_args }}
 
     - name: Start containers
       run: docker compose -f "docker-compose.yml" up -d --build mssql
@@ -160,10 +161,12 @@ jobs:
       MYSQL_PASSWORD: test
       MYSQL_DATABASE: testdb
       MYSQL_CHARSET: utf8
+      MYSQL_SERVER_VERSION: ${{ matrix.mysql }}.0
 
     strategy:
       matrix:
         mysql: ["9.5", "8.4", "5.7"]
+        composer_args: ["", "--prefer-lowest"]
 
     steps:
     - uses: actions/checkout@v6
@@ -183,7 +186,7 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install dependencies
-      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs ${{ matrix.composer_args }}
 
     - name: Start containers
       run: docker compose -f "docker-compose.yml" up -d --build mysql
@@ -229,10 +232,12 @@ jobs:
       MARIADB_PASSWORD: test
       MARIADB_DATABASE: testdb
       MARIADB_CHARSET: utf8
+      MARIADB_SERVER_VERSION: 5.7.0
 
     strategy:
       matrix:
         mariadb: ["12", "11"]
+        composer_args: ["", "--prefer-lowest"]
 
     steps:
     - uses: actions/checkout@v6
@@ -252,7 +257,7 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install dependencies
-      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs ${{ matrix.composer_args }}
 
     - name: Start containers
       run: docker compose -f "docker-compose.yml" up -d --build mariadb
@@ -301,6 +306,7 @@ jobs:
     strategy:
       matrix:
         postgres: ["18", "17", "16", "15", "14"]
+        composer_args: ["", "--prefer-lowest"]
 
     steps:
     - uses: actions/checkout@v6
@@ -320,7 +326,7 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install dependencies
-      run: composer update --prefer-dist --no-progress --ignore-platform-reqs
+      run: composer update --prefer-dist --no-progress --ignore-platform-reqs ${{ matrix.composer_args }}
 
     - name: Start containers
       run: docker compose -f "docker-compose.yml" up -d --build postgresql

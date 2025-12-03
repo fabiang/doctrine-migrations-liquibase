@@ -22,7 +22,7 @@ $defaultProfile->withSuite(
             'user'          => getenv('MYSQL_USER'),
             'password'      => getenv('MYSQL_PASSWORD'),
             'charset'       => getenv('MYSQL_CHARSET'),
-            'serverVersion' => getenv('MYSQL_SERVER_VERSION'), 
+            'serverVersion' => getenv('MYSQL_SERVER_VERSION'),
         ])
         ->addContext(MariaDBContext::class, [
             'driver'        => getenv('MARIADB_DRIVER'),
@@ -32,7 +32,7 @@ $defaultProfile->withSuite(
             'user'          => getenv('MARIADB_USER'),
             'password'      => getenv('MARIADB_PASSWORD'),
             'charset'       => getenv('MARIADB_CHARSET'),
-            'serverVersion' => getenv('MARIADB_SERVER_VERSION'), 
+            'serverVersion' => getenv('MARIADB_SERVER_VERSION'),
         ])
         ->addContext(PostgreSQLContext::class, [
             'driver'   => getenv('POSTGRES_DRIVER'),
