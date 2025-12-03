@@ -8,18 +8,29 @@ use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="reservedkeywords")
+ */
 #[ORM\Entity()]
-#[ORM\Table(schema: 'testdb', name: 'ReservedKeywords')]
+#[ORM\Table(name: 'reservedkeywords')]
 class ReservedKeywords
 {
+    /**
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     */
     #[ORM\Id()]
     #[ORM\Column(type: Types::INTEGER)]
     #[ORM\GeneratedValue(strategy: "IDENTITY")]
     private ?int $id;
 
+    /** @ORM\Column(type="date", nullable=false) */
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: false)]
     private ?DateTime $from;
 
+    /** @ORM\Column(type="datetime", nullable=false) */
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: false)]
     private ?DateTime $to;
 

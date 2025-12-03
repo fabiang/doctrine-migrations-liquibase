@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use Doctrine\DBAL\Schema\Comparator;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\SchemaDiff;
 use Doctrine\ORM\EntityManagerInterface;
@@ -130,7 +131,13 @@ class LiquibaseSchemaTool extends SchemaTool
             $soutput->alterTable($tableDiff);
 
             foreach ($tableDiff->getDroppedForeignKeys() as $foreignKey) {
-                $soutput->dropForeignKey($foreignKey, $tableDiff->getOldTable());
+                $oldTable = $tableDiff->getOldTable();
+                /**
+                 * @psalm-suppress RedundantCondition
+                 */
+                if ($foreignKey instanceof ForeignKeyConstraint && $oldTable !== null) {
+                    $soutput->dropForeignKey($foreignKey, $oldTable);
+                }
             }
         }
 

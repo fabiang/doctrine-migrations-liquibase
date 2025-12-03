@@ -11,43 +11,40 @@ Feature: SQLite migrations
     """
     <?xml version="1.0"?>
     <databaseChangeLog>
-      <changeSet author="doctrine-migrations-liquibase" id="create-schema-testdb">
-        <sql>CREATE SCHEMA `testdb`</sql>
-      </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Bar">
-        <createTable schemaName="testdb" tableName="bar">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-bar">
+        <createTable tableName="bar">
           <column name="id" type="varchar(255)">
             <constraints primaryKey="true" nullable="false"/>
           </column>
         </createTable>
       </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Foo">
-        <createTable schemaName="testdb" tableName="foo">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-foo">
+        <createTable tableName="foo">
           <column name="id" type="int">
             <constraints primaryKey="true" nullable="false"/>
           </column>
         </createTable>
       </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-IndexColumns">
-        <createTable schemaName="testdb" tableName="indexcolumns">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-indexcolumns">
+        <createTable tableName="indexcolumns">
           <column name="id" type="int">
             <constraints primaryKey="true" nullable="false"/>
           </column>
           <column name="date" type="date"/>
           <column name="libelle" type="varchar(255)"/>
           <column name="commentaire" type="varchar(500)">
-            <constraints unique="true" uniqueConstraintName="UNIQ_78B576EA67F068BC"/>
+            <constraints unique="true" uniqueConstraintName="UNIQ_4C63D8C567F068BC"/>
           </column>
         </createTable>
-        <createIndex schemaName="testdb" tableName="indexcolumns" indexName="IDX_78B576EAAA9E377A">
+        <createIndex tableName="indexcolumns" indexName="IDX_4C63D8C5AA9E377A">
           <column name="date"/>
         </createIndex>
-        <createIndex schemaName="testdb" tableName="indexcolumns" indexName="IDX_78B576EAA4D60759">
+        <createIndex tableName="indexcolumns" indexName="IDX_4C63D8C5A4D60759">
           <column name="libelle"/>
         </createIndex>
       </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-ReservedKeywords">
-        <createTable schemaName="testdb" tableName="reservedkeywords">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-reservedkeywords">
+        <createTable tableName="reservedkeywords">
           <column name="id" type="int">
             <constraints primaryKey="true" nullable="false"/>
           </column>
@@ -69,43 +66,40 @@ Feature: SQLite migrations
     """
     <?xml version="1.0"?>
     <databaseChangeLog>
-      <changeSet author="doctrine-migrations-liquibase" id="create-schema-testdb">
-        <sql>CREATE SCHEMA `testdb`</sql>
-      </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Bar">
-        <createTable schemaName="testdb" tableName="bar">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-bar">
+        <createTable tableName="bar">
           <column name="id" type="varchar(255)">
             <constraints primaryKey="true" nullable="false"/>
           </column>
         </createTable>
       </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-Foo">
-        <createTable schemaName="testdb" tableName="foo">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-foo">
+        <createTable tableName="foo">
           <column name="id" type="int">
             <constraints primaryKey="true" nullable="false"/>
           </column>
         </createTable>
       </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-IndexColumns">
-        <createTable schemaName="testdb" tableName="indexcolumns">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-indexcolumns">
+        <createTable tableName="indexcolumns">
           <column name="id" type="int">
             <constraints primaryKey="true" nullable="false"/>
           </column>
           <column name="date" type="date"/>
           <column name="libelle" type="varchar(255)"/>
           <column name="commentaire" type="varchar(500)">
-            <constraints unique="true" uniqueConstraintName="UNIQ_78B576EA67F068BC"/>
+            <constraints unique="true" uniqueConstraintName="UNIQ_4C63D8C567F068BC"/>
           </column>
         </createTable>
-        <createIndex schemaName="testdb" tableName="indexcolumns" indexName="IDX_78B576EAAA9E377A">
+        <createIndex tableName="indexcolumns" indexName="IDX_4C63D8C5AA9E377A">
           <column name="date"/>
         </createIndex>
-        <createIndex schemaName="testdb" tableName="indexcolumns" indexName="IDX_78B576EAA4D60759">
+        <createIndex tableName="indexcolumns" indexName="IDX_4C63D8C5A4D60759">
           <column name="libelle"/>
         </createIndex>
       </changeSet>
-      <changeSet author="doctrine-migrations-liquibase" id="create-table-testdb-ReservedKeywords">
-        <createTable schemaName="testdb" tableName="reservedkeywords">
+      <changeSet author="doctrine-migrations-liquibase" id="create-table-reservedkeywords">
+        <createTable tableName="reservedkeywords">
           <column name="id" type="int">
             <constraints primaryKey="true" nullable="false"/>
           </column>

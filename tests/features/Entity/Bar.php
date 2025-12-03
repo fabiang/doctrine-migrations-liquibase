@@ -7,10 +7,18 @@ namespace Fabiang\Doctrine\Migrations\Liquibase\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(name="bar")
+ */
 #[ORM\Entity()]
-#[ORM\Table(schema: 'testdb', name: 'Bar')]
+#[ORM\Table(name: 'bar')]
 class Bar
 {
+    /**
+     * @ORM\Id
+     * @ORM\Column(type="string")
+     */
     #[ORM\Id()]
     #[ORM\Column(type: Types::STRING)]
     private ?string $id;

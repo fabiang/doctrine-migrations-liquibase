@@ -22,6 +22,7 @@ use DOMDocument;
 use DOMElement;
 use Fabiang\Doctrine\Migrations\Liquibase\DBAL\IndexColumns;
 use Fabiang\Doctrine\Migrations\Liquibase\DBAL\QualifiedName;
+use Fabiang\Doctrine\Migrations\Liquibase\Helper\VersionHelper;
 use Override;
 
 use function array_key_exists;
@@ -202,13 +203,11 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         $this->root->appendChild($changeSetElt);
     }
 
-    /**
-     * @return string
-     */
-    protected function getColumnType(Column $column)
+    protected function getColumnType(Column $column): string
     {
-        if ($column->getColumnDefinition()) {
-            return $column->getColumnDefinition();
+        $columDef = $column->getColumnDefinition();
+        if ($columDef !== null) {
+            return $columDef;
         }
 
         if ($this->options->isUsePlatformTypes()) {
@@ -224,7 +223,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
                 Types\IntegerType::class => 'int',
                 Types\FloatType::class => 'float',
                 default => 'varchar',
+            // phpcs:disable
             };
+            // phpcs:enable
         }
 
         $length = $column->getLength();
@@ -375,10 +376,18 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             $addForeignKeyConstraintElt->setAttribute('baseTableSchemaName', $namespaceName);
         }
         $addForeignKeyConstraintElt->setAttribute('baseTableName', $tableName->getName());
-        $addForeignKeyConstraintElt->setAttribute(
-            'baseColumnNames',
-            implode(',', $this->unqualifiedNameIdentifiersToArray($foreignKey->getReferencingColumnNames()))
-        );
+
+        if (VersionHelper::isDBALVersion4()) {
+            /**
+             * @psalm-suppress UndefinedMethod
+             */
+            $addForeignKeyConstraintElt->setAttribute(
+                'baseColumnNames',
+                implode(',', $this->unqualifiedNameIdentifiersToArray($foreignKey->getReferencingColumnNames()))
+            );
+        } else {
+            $addForeignKeyConstraintElt->setAttribute('baseColumnNames', implode(',', $foreignKey->getLocalColumns()));
+        }
 
         $referencedTableName = QualifiedName::fromQualifiedName($foreignKey->getForeignTableName());
 
@@ -387,17 +396,34 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             $addForeignKeyConstraintElt->setAttribute('referencedTableSchemaName', $namespaceName);
         }
         $addForeignKeyConstraintElt->setAttribute('referencedTableName', $referencedTableName->getName());
-        $addForeignKeyConstraintElt->setAttribute(
-            'referencedColumnNames',
-            implode(',', $this->unqualifiedNameIdentifiersToArray($foreignKey->getReferencedColumnNames()))
-        );
+
+        if (VersionHelper::isDBALVersion4()) {
+            /**
+             * @psalm-suppress UndefinedMethod
+             */
+            $addForeignKeyConstraintElt->setAttribute(
+                'referencedColumnNames',
+                implode(',', $this->unqualifiedNameIdentifiersToArray($foreignKey->getReferencedColumnNames()))
+            );
+        } else {
+            $addForeignKeyConstraintElt->setAttribute(
+                'referencedColumnNames',
+                implode(',', $foreignKey->getForeignColumns())
+            );
+        }
     }
 
     private function unqualifiedNameIdentifiersToArray(array $identifiers): array
     {
-        return array_map(function (UnqualifiedName $name) {
-            return $name->toString();
-        }, $identifiers);
+        return array_map(
+            /**
+             * @psalm-suppress UndefinedClass
+             */
+            function (UnqualifiedName $name) {
+                return $name->toString();
+            },
+            $identifiers
+        );
     }
 
     #[Override]
@@ -446,14 +472,22 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
     #[Override]
     public function alterTable(TableDiff $tableDiff): void
     {
+        $oldTable = $tableDiff->getOldTable();
+        /**
+         * @psalm-suppress TypeDoesNotContainNull
+         */
+        if ($oldTable === null) {
+            return;
+        }
+
         /**
          * @psalm-suppress InternalMethod
          */
-        $changeSetElt = $this->createChangeSet('alter-table-' . $tableDiff->getOldTable()->getName());
+        $changeSetElt = $this->createChangeSet('alter-table-' . $oldTable->getName());
 
-        $fromTableName = QualifiedName::fromAsset($tableDiff->getOldTable());
+        $fromTableName = QualifiedName::fromAsset($oldTable);
 
-        $indexColumns = new IndexColumns($tableDiff->getOldTable());
+        $indexColumns = new IndexColumns($oldTable);
 
         $this->alterTableAddedColumns($tableDiff, $fromTableName, $indexColumns, $changeSetElt);
         $this->alterTableAddedIndexes($tableDiff, $fromTableName, $indexColumns, $changeSetElt);
@@ -462,7 +496,16 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         $this->alterTableRenamedColumns($tableDiff, $fromTableName, $changeSetElt);
         $this->alterTableRenamedIndexes($tableDiff, $fromTableName, $changeSetElt);
 
-        foreach ($tableDiff->getChangedColumns() as $column) {
+        if (VersionHelper::isDBALVersion4()) {
+            /**
+             * @psalm-suppress UndefinedMethod
+             */
+            $changedColumns = $tableDiff->getChangedColumns();
+        } else {
+            $changedColumns = $tableDiff->getModifiedColumns();
+        }
+
+        foreach ($changedColumns as $column) {
             $this->alterTableChangedColumn($column, $fromTableName, $changeSetElt);
         }
 
@@ -517,6 +560,14 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         IndexColumns $indexColumns,
         DOMElement $changeSetElt
     ): void {
+        $oldTable = $tableDiff->getOldTable();
+        /**
+         * @psalm-suppress TypeDoesNotContainNull
+         */
+        if ($oldTable === null) {
+            return;
+        }
+
         foreach ($tableDiff->getAddedIndexes() as $index) {
             $createIndexElt = $this->document->createElement('createIndex');
 
@@ -533,10 +584,21 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             foreach ($index->getColumns() as $columnName) {
                 $columnElt = $this->document->createElement('column');
 
-                if ($tableDiff->getOldTable()->hasColumn($columnName)) {
-                    $column = $tableDiff->getOldTable()->getColumn($columnName);
+                if ($oldTable->hasColumn($columnName)) {
+                    $column = $oldTable->getColumn($columnName);
                 } else {
-                    $column = $tableDiff->getAddedColumns()[$columnName];
+                    if (VersionHelper::isDBALVersion4()) {
+                        /**
+                         * @psalm-suppress InvalidArrayOffset
+                         */
+                        $column = $tableDiff->getAddedColumns()[$columnName];
+                    } else {
+                        /**
+                         * @psalm-suppress InternalProperty
+                         * @psalm-suppress InaccessibleProperty
+                         */
+                        $column = $tableDiff->addedColumns[$columnName];
+                    }
                 }
 
                 $this->fillColumnAttributes($columnElt, $column, $indexColumns);
@@ -550,10 +612,18 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
 
     protected function alterTableAddedForeignKeys(TableDiff $tableDiff, DOMElement $changeSetElt): void
     {
+        $oldTable = $tableDiff->getOldTable();
+        /**
+         * @psalm-suppress TypeDoesNotContainNull
+         */
+        if ($oldTable === null) {
+            return;
+        }
+
         foreach ($tableDiff->getAddedForeignKeys() as $foreignKey) {
             $addForeignKeyConstraintElt = $this->document->createElement('addForeignKeyConstraint');
 
-            $this->fillForeignKeyAttributes($addForeignKeyConstraintElt, $foreignKey, $tableDiff->getOldTable());
+            $this->fillForeignKeyAttributes($addForeignKeyConstraintElt, $foreignKey, $oldTable);
 
             $changeSetElt->appendChild($addForeignKeyConstraintElt);
         }
@@ -564,12 +634,31 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         QualifiedName $fromTableName,
         DOMElement $changeSetElt
     ): void {
-        foreach ($tableDiff->getChangedColumns() as $oldName => $columnDiff) {
+        if (VersionHelper::isDBALVersion4()) {
+            /**
+             * @psalm-suppress UndefinedMethod
+             */
+            $changedColumns = $tableDiff->getChangedColumns();
+        } else {
+            /**
+             * @psalm-suppress InternalProperty
+             * @psalm-suppress UndefinedPropertyFetch
+             */
+            $changedColumns = $tableDiff->renamedColumns;
+        }
+
+        foreach ($changedColumns as $oldName => $columnDiffOrColumn) {
             $renameColumnElt = $this->document->createElement('renameColumn');
 
-            $columnName = QualifiedName::fromAsset($columnDiff->getNewColumn());
+            // DBAL >= 4
+            if ($columnDiffOrColumn instanceof ColumnDiff) {
+                $columnName = QualifiedName::fromAsset($columnDiffOrColumn->getNewColumn());
+            } else {
+                $columnName = QualifiedName::fromAsset($columnDiffOrColumn);
+            }
 
-            if ($schemaName = $fromTableName->getNamespaceName()) {
+            $schemaName = $fromTableName->getNamespaceName();
+            if ($schemaName) {
                 $renameColumnElt->setAttribute('schemaName', $schemaName);
             }
 
@@ -647,6 +736,10 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         DOMElement $changeSetElt
     ): void {
         foreach ($tableDiff->getDroppedForeignKeys() as $foreignKey) {
+            if (! $foreignKey instanceof ForeignKeyConstraint) {
+                continue;
+            }
+
             $dropForeignKeyConstraintElt = $this->document->createElement('dropForeignKeyConstraint');
 
             $foreignKeyName = QualifiedName::fromAsset($foreignKey);
@@ -667,7 +760,15 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         QualifiedName $fromTableName,
         DOMElement $changeSetElt
     ): void {
-        $oldColunmName = QualifiedName::fromAsset($columnDiff->getOldColumn());
+        $oldColumn = $columnDiff->getOldColumn();
+        /**
+         * @psalm-suppress TypeDoesNotContainNull
+         */
+        if ($oldColumn === null) {
+            return;
+        }
+
+        $oldColunmName = QualifiedName::fromAsset($oldColumn);
         $columnName    = QualifiedName::fromAsset($columnDiff->getNewColumn());
 
         if ($oldColunmName->getName() !== $columnName->getName()) {
@@ -683,7 +784,33 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             $changeSetElt->appendChild($renameColumnElt);
         }
 
-        $properties = $columnDiff->countChangedProperties();
+        if (VersionHelper::isDBALVersion4()) {
+            /**
+             * @psalm-suppress UndefinedMethod
+             */
+            $properties = $columnDiff->countChangedProperties();
+
+            $changedProperties = [];
+            /**
+             * @psalm-suppress UndefinedMethod
+             */
+            foreach (
+                [
+                    'platformOption' => $columnDiff->hasPlatformOptionsChanged(),
+                    'comment'        => $columnDiff->hasCommentChanged(),
+                ] as $property => $changed
+            ) {
+                if ($changed) {
+                    $changedProperties[] = $property;
+                }
+            }
+        } else {
+            /**
+             * @psalm-suppress UndefinedPropertyFetch
+             */
+            $changedProperties = $columnDiff->changedProperties;
+            $properties        = count($changedProperties);
+        }
 
         if ($properties > 0) {
             $typeIndex = $columnDiff->hasTypeChanged();
@@ -709,25 +836,13 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         }
 
         if ($properties > 0) {
-            $changedProperties = [];
-            foreach (
-                [
-                    'platformOption' => $columnDiff->hasPlatformOptionsChanged(),
-                    'comment'        => $columnDiff->hasCommentChanged(),
-                ] as $property => $changed
-            ) {
-                if ($changed) {
-                    $changedProperties[] = $property;
-                }
-            }
-
             /**
              * @psalm-suppress InternalMethod
              */
             $commentElt = $this->document->createComment(
                 sprintf(
                     ' Some column property changes are not supported (column: %s for properties [%s]) ',
-                    $columnDiff->getOldColumn()->getName(),
+                    $oldColumn->getName(),
                     implode(', ', $changedProperties)
                 )
             );

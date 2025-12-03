@@ -8,24 +8,43 @@ use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @ORM\Entity
+ * @ORM\Table(
+ *   name="indexcolumns",
+ *   uniqueConstraints={@ORM\UniqueConstraint(name="user_unique",columns={"commentaire"})},
+ *   indexes={
+ *     @ORM\Index(name="user_idx", columns={"date"})
+ *     @ORM\Index(name="user_idx", columns={"libelle"})
+ *   }
+ * )
+ */
 #[ORM\Entity()]
-#[ORM\Table(schema: 'testdb', name: 'IndexColumns')]
+#[ORM\Table(name: 'indexcolumns')]
 #[ORM\Index(columns: ['date'])]
 #[ORM\Index(fields: ['libelle'])]
 #[ORM\UniqueConstraint(fields: ['commentaire'])]
 class IndexColumns
 {
+    /**
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     */
     #[ORM\Id()]
     #[ORM\Column(type: Types::INTEGER)]
     #[ORM\GeneratedValue(strategy: "IDENTITY")]
     private ?int $id;
 
+    /** @ORM\Column(type="date", nullable=true) */
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?DateTime $date;
 
+    /** @ORM\Column(type="date", nullable=true) */
     #[ORM\Column(type: Types::STRING, nullable: true)]
     private ?string $libelle;
 
+    /** @ORM\Column(type="date", nullable=true, length=500) */
     #[ORM\Column(type: Types::STRING, nullable: true, length: 500)]
     private ?string $commentaire;
 

@@ -5,19 +5,20 @@ declare(strict_types=1);
 namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\ColumnDiff;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Types as DoctrineType;
 use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
+use Fabiang\Doctrine\Migrations\Liquibase\ColumnDiffTrait;
+use Fabiang\Doctrine\Migrations\Liquibase\Helper\VersionHelper;
+use Fabiang\Doctrine\Migrations\Liquibase\TableDiffTrait;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Xpath\AssertTrait as XPathAssert;
 use Prophecy\Argument;
@@ -29,7 +30,9 @@ use Prophecy\Prophecy\ObjectProphecy;
  */
 final class LiquibaseDOMDocumentOutputTest extends TestCase
 {
+    use ColumnDiffTrait;
     use ProphecyTrait;
+    use TableDiffTrait;
     use XPathAssert;
 
     private LiquibaseDOMDocumentOutput $output;
@@ -106,7 +109,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
     public function testCreateSchemaWithExceptionThrown(): void
     {
         $this->platform->getCreateSchemaSQL('myns')
-            ->willThrow(new NotSupported('test'));
+            ->willThrow($this->prophesize(DBALException::class)->reveal());
 
         $this->output->createSchema('myns');
         $this->output->terminated();
@@ -391,22 +394,29 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $foreignKey->getName()->willReturn('namespace.test');
         $foreignKey->getNamespaceName()->willReturn('namespace');
         $foreignKey->getShortestName('namespace')->willReturn('test');
-        $foreignKey->getLocalColumns()->willReturn([
-            UnqualifiedName::unquoted('test1'),
-            UnqualifiedName::unquoted('test2'),
-        ]);
-        $foreignKey->getReferencingColumnNames()->willReturn([
-            UnqualifiedName::unquoted('test1'),
-            UnqualifiedName::unquoted('test2'),
-        ]);
-        $foreignKey->getForeignColumns()->willReturn([
-            UnqualifiedName::unquoted('test3'),
-            UnqualifiedName::unquoted('test4'),
-        ]);
-        $foreignKey->getReferencedColumnNames()->willReturn([
-            UnqualifiedName::unquoted('test3'),
-            UnqualifiedName::unquoted('test4'),
-        ]);
+
+        if (VersionHelper::isDBALVersion4()) {
+            $foreignKey->getLocalColumns()->willReturn([
+                UnqualifiedName::unquoted('test1'),
+                UnqualifiedName::unquoted('test2'),
+            ]);
+            $foreignKey->getReferencingColumnNames()->willReturn([
+                UnqualifiedName::unquoted('test1'),
+                UnqualifiedName::unquoted('test2'),
+            ]);
+            $foreignKey->getForeignColumns()->willReturn([
+                UnqualifiedName::unquoted('test3'),
+                UnqualifiedName::unquoted('test4'),
+            ]);
+            $foreignKey->getReferencedColumnNames()->willReturn([
+                UnqualifiedName::unquoted('test3'),
+                UnqualifiedName::unquoted('test4'),
+            ]);
+        } else {
+            $foreignKey->getLocalColumns()->willReturn(['test1', 'test2']);
+            $foreignKey->getForeignColumns()->willReturn(['test3', 'test4']);
+        }
+
         $foreignKey->getForeignTableName()->willReturn('namespace.othertable');
 
         $table = $this->getTestTable();
@@ -458,7 +468,10 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $column1     = new Column('column1', $columnType1);
         $column1->setLength(10);
 
-        $tableDiff = new TableDiff(oldTable: $table->reveal(), addedColumns: [$column1]);
+        $tableDiff = $this->tableDiff(
+            oldTable: $table->reveal(),
+            addedColumns: [$column1]
+        );
 
         $this->output->alterTable($tableDiff);
         $this->output->terminated();
@@ -503,7 +516,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $table->getColumn('column3')->willReturn($column3);
         $table->getColumn('column4')->willReturn($column4);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             addedColumns: ['column1' => $column1, 'column2' => $column2],
             addedIndexes: ['myindex1' => $index1, 'index2' => $index2]
@@ -563,25 +576,32 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $foreignKey->getName()->willReturn('namespace.test');
         $foreignKey->getNamespaceName()->willReturn('namespace');
         $foreignKey->getShortestName('namespace')->willReturn('test');
-        $foreignKey->getLocalColumns()->willReturn([
-            UnqualifiedName::unquoted('test1'),
-            UnqualifiedName::unquoted('test2'),
-        ]);
-        $foreignKey->getReferencingColumnNames()->willReturn([
-            UnqualifiedName::unquoted('test1'),
-            UnqualifiedName::unquoted('test2'),
-        ]);
-        $foreignKey->getForeignColumns()->willReturn([
-            UnqualifiedName::unquoted('test3'),
-            UnqualifiedName::unquoted('test4'),
-        ]);
-        $foreignKey->getReferencedColumnNames()->willReturn([
-            UnqualifiedName::unquoted('test3'),
-            UnqualifiedName::unquoted('test4'),
-        ]);
+
+        if (VersionHelper::isDBALVersion4()) {
+            $foreignKey->getLocalColumns()->willReturn([
+                UnqualifiedName::unquoted('test1'),
+                UnqualifiedName::unquoted('test2'),
+            ]);
+            $foreignKey->getReferencingColumnNames()->willReturn([
+                UnqualifiedName::unquoted('test1'),
+                UnqualifiedName::unquoted('test2'),
+            ]);
+            $foreignKey->getForeignColumns()->willReturn([
+                UnqualifiedName::unquoted('test3'),
+                UnqualifiedName::unquoted('test4'),
+            ]);
+            $foreignKey->getReferencedColumnNames()->willReturn([
+                UnqualifiedName::unquoted('test3'),
+                UnqualifiedName::unquoted('test4'),
+            ]);
+        } else {
+            $foreignKey->getLocalColumns()->willReturn(['test1', 'test2']);
+            $foreignKey->getForeignColumns()->willReturn(['test3', 'test4']);
+        }
+
         $foreignKey->getForeignTableName()->willReturn('namespace.othertable');
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             addedForeignKeys: [$foreignKey->reveal()],
         );
@@ -616,9 +636,9 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $newColumn   = new Column('newcolumn', $columnType1);
         $newColumn->setLength(10);
 
-        $columnDiff = new ColumnDiff($oldColumn, $newColumn);
+        $columnDiff = $this->columnDiff($oldColumn, $newColumn);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             changedColumns: ['oldcolumn' => $columnDiff],
         );
@@ -647,7 +667,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $index1 = new Index('index1', ['test1', 'test2']);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             renamedIndexes: ['oldindex' => $index1],
         );
@@ -673,7 +693,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $column1     = new Column('removedcolumn', $columnType1);
         $column1->setLength(10);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             droppedColumns: ['removedcolumn' => $column1],
         );
@@ -701,7 +721,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $index1 = new Index('removeindex', ['test1', 'test2']);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             droppedIndexes: ['removeindex' => $index1]
         );
@@ -735,7 +755,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $foreignKey->getForeignColumns()->willReturn(['test3', 'test4']);
         $foreignKey->getForeignTableName()->willReturn('namespace.othertable');
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             droppedForeignKeys: [$foreignKey->reveal()],
         );
@@ -762,7 +782,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
     {
         $table = $this->getTestTable();
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             droppedForeignKeys: [new ForeignKeyConstraint([], '', [], 'test')],
         );
@@ -791,13 +811,13 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $columnType1 = new DoctrineType\StringType();
 
-        $columnOld = new Column('oldname', $columnType1);
-        $columnNew = new Column('changed', $columnType1);
-        $columnNew->setLength(10);
+        $oldColumn = new Column('oldname', $columnType1);
+        $newColumn = new Column('changed', $columnType1);
+        $newColumn->setLength(10);
 
-        $columnDiff1 = new ColumnDiff($columnOld, $columnNew);
+        $columnDiff1 = $this->columnDiff($oldColumn, $newColumn);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             changedColumns: ['changed' => $columnDiff1],
         );
@@ -827,13 +847,13 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $columnTypeText   = new DoctrineType\TextType();
         $columnTypeString = new DoctrineType\StringType();
 
-        $columnOld = new Column('notchangedname', $columnTypeText);
-        $columnNew = new Column('notchangedname', $columnTypeString);
-        $columnNew->setLength(10);
+        $oldColumn = new Column('notchangedname', $columnTypeText);
+        $newColumn = new Column('notchangedname', $columnTypeString);
+        $newColumn->setLength(10);
 
-        $columnDiff1 = new ColumnDiff($columnOld, $columnNew);
+        $columnDiff1 = $this->columnDiff($oldColumn, $newColumn, ['type']);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             changedColumns: ['notchangedname' => $columnDiff1],
         );
@@ -862,15 +882,15 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $columnType1 = new DoctrineType\StringType();
 
-        $columnOld = new Column('notchangedname', $columnType1);
-        $columnOld->setPlatformOption('someotherproperty', 'foo');
+        $oldColumn = new Column('notchangedname', $columnType1);
+        $oldColumn->setPlatformOption('someotherproperty', 'foo');
 
-        $columnNew = new Column('notchangedname', $columnType1);
-        $columnNew->setPlatformOption('someotherproperty', 'bar');
+        $newColumn = new Column('notchangedname', $columnType1);
+        $newColumn->setPlatformOption('someotherproperty', 'bar');
 
-        $columnDiff1 = new ColumnDiff($columnOld, $columnNew);
+        $columnDiff1 = $this->columnDiff($oldColumn, $newColumn, ['platformOption']);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable:  $table->reveal(),
             changedColumns: ['notchangedname' => $columnDiff1],
         );
@@ -895,7 +915,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
         $index1 = new Index('changeindex', ['test1', 'test2']);
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             renamedIndexes: [$index1],
         );
@@ -925,7 +945,7 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
         $foreignKey->getForeignColumns()->willReturn(['test3', 'test4']);
         $foreignKey->getForeignTableName()->willReturn('namespace.othertable');
 
-        $tableDiff = new TableDiff(
+        $tableDiff = $this->tableDiff(
             oldTable: $table->reveal(),
             modifiedForeignKeys: [$foreignKey->reveal()],
         );

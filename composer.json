@@ -20,14 +20,17 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Fabiang\\Doctrine\\Migrations\\Liquibase\\": "tests/features/bootstrap",
-            "Fabiang\\Doctrine\\Migrations\\Liquibase\\Entity\\": "tests/features/Entitiy"
+            "Fabiang\\Doctrine\\Migrations\\Liquibase\\": [
+                "tests/features/bootstrap",
+                "tests/units/src"
+            ],
+            "Fabiang\\Doctrine\\Migrations\\Liquibase\\Entity\\": "tests/features/Entity"
         }
     },
     "require": {
         "php": "~8.3.0 || ~8.4.0",
-        "doctrine/orm": "^3.0",
-        "doctrine/dbal": "^4.3"
+        "doctrine/orm": "^2.20 || ^3.0",
+        "doctrine/dbal": "^3.10 || ^4.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^12.4",
