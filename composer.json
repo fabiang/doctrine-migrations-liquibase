@@ -50,11 +50,13 @@
         "toilal/doctrine-migrations-liquibase": "self.version"
     },
     "scripts": {
-        "lint": "psalm --no-cache",
-        "unittest": "phpunit",
-        "integration": "behat",
+        "lint": [
+            "phpcs --colors",
+            "psalm --no-cache"
+        ],
+        "unittest": "phpunit --coverage-text --colors",
+        "integration": "behat --colors",
         "test": [
-            "phpcs",
             "@lint",
             "@unittest",
             "@integration"
