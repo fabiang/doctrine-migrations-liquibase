@@ -1,0 +1,11 @@
+#!/bin/sh
+composer lint
+
+composer unittest
+composer integration
+
+composer up --prefer-lowest
+composer unittest
+composer integration
+
+composer up
