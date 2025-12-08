@@ -4,35 +4,22 @@ declare(strict_types=1);
 
 namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 
-/**
- * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\LiquibaseOutputOptions
- */
+#[CoversClass(LiquibaseOutputOptions::class)]
 final class LiquibaseOutputOptionsTest extends TestCase
 {
     use ProphecyTrait;
 
     private LiquibaseOutputOptions $object;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
     protected function setUp(): void
     {
         $this->object = new LiquibaseOutputOptions();
     }
 
-    /**
-     * @covers ::isUsePlatformTypes
-     * @covers ::setUsePlatformTypes
-     * @covers ::isChangeSetUniqueId
-     * @covers ::setChangeSetUniqueId
-     * @covers ::getChangeSetAuthor
-     * @covers ::setChangeSetAuthor
-     */
     public function testSetterAndGetter(): void
     {
         $this->assertFalse($this->object->isUsePlatformTypes());

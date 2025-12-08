@@ -6,23 +6,15 @@ namespace Fabiang\Doctrine\Migrations\Liquibase\DBAL;
 
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 
-/**
- * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\IndexColumns
- */
+#[CoversClass(IndexColumns::class)]
 final class IndexColumnsTest extends TestCase
 {
     use ProphecyTrait;
 
-    /**
-     * @covers ::__construct
-     * @covers ::getPrimaryColumns
-     * @covers ::getPrimaryKeyColumns
-     * @covers ::getUniqueColumns
-     * @covers ::getOtherIndexes
-     */
     public function testNoIndexColumnsPassed(): void
     {
         $table = $this->prophesize(Table::class);
@@ -38,13 +30,6 @@ final class IndexColumnsTest extends TestCase
         $this->assertSame([], $object->getOtherIndexes());
     }
 
-    /**
-     * @covers ::__construct
-     * @covers ::getPrimaryColumns
-     * @covers ::getPrimaryKeyColumns
-     * @covers ::getUniqueColumns
-     * @covers ::getOtherIndexes
-     */
     public function testIndexesArePassed(): void
     {
         $primaryIndex1 = new Index('primary1', ['test1', 'test2'], false, true);

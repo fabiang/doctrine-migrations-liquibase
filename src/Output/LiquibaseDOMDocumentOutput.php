@@ -32,6 +32,8 @@ use function count;
 use function get_class;
 use function implode;
 use function in_array;
+use function is_bool;
+use function is_numeric;
 use function preg_replace;
 use function sprintf;
 use function strval;
@@ -97,7 +99,6 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             'id',
             $this->options->isChangeSetUniqueId() ? $sanitizedId . '-' . uniqid() : $sanitizedId
         );
-        $this->root->appendChild($changeSet);
         return $changeSet;
     }
 
@@ -480,6 +481,10 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             return;
         }
 
+        if ($tableDiff->isEmpty()) {
+            return;
+        }
+
         /**
          * @psalm-suppress InternalMethod
          */
@@ -509,10 +514,6 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             $this->alterTableChangedColumn($column, $fromTableName, $changeSetElt);
         }
 
-        foreach ($tableDiff->getRenamedIndexes() as $index) {
-            $this->alterTableChangedIndex($index, $fromTableName, $changeSetElt);
-        }
-
         foreach ($tableDiff->getModifiedForeignKeys() as $foreignKey) {
             $this->alterTableChangedForeignKey($foreignKey, $fromTableName, $changeSetElt);
         }
@@ -521,7 +522,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         $this->alterTableRemovedIndexes($tableDiff, $fromTableName, $changeSetElt);
         $this->alterTableRemovedForeignKeys($tableDiff, $fromTableName, $changeSetElt);
 
-        $this->root->appendChild($changeSetElt);
+        if ($changeSetElt->firstChild !== null) {
+            $this->root->appendChild($changeSetElt);
+        }
     }
 
     protected function alterTableAddedColumns(
@@ -569,45 +572,60 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         }
 
         foreach ($tableDiff->getAddedIndexes() as $index) {
-            $createIndexElt = $this->document->createElement('createIndex');
-
-            if ($schemaName = $fromTableName->getNamespaceName()) {
-                $createIndexElt->setAttribute('schemaName', $schemaName);
-            }
-            $createIndexElt->setAttribute('tableName', $fromTableName->getName());
-            /**
-             * @psalm-suppress InternalMethod
-             */
-            $createIndexElt->setAttribute('indexName', $index->getName());
-            $createIndexElt->setAttribute('unique', $index->isUnique() ? 'true' : 'false');
-
-            foreach ($index->getColumns() as $columnName) {
-                $columnElt = $this->document->createElement('column');
-
-                if ($oldTable->hasColumn($columnName)) {
-                    $column = $oldTable->getColumn($columnName);
-                } else {
-                    if (VersionHelper::isDBALVersion4()) {
-                        /**
-                         * @psalm-suppress InvalidArrayOffset
-                         */
-                        $column = $tableDiff->getAddedColumns()[$columnName];
-                    } else {
-                        /**
-                         * @psalm-suppress InternalProperty
-                         * @psalm-suppress InaccessibleProperty
-                         */
-                        $column = $tableDiff->addedColumns[$columnName];
-                    }
-                }
-
-                $this->fillColumnAttributes($columnElt, $column, $indexColumns);
-
-                $createIndexElt->appendChild($columnElt);
-            }
-
-            $changeSetElt->appendChild($createIndexElt);
+            $this->createIndex($tableDiff, $fromTableName, $oldTable, $index, $indexColumns, $changeSetElt);
         }
+    }
+
+    protected function createIndex(
+        TableDiff $tableDiff,
+        QualifiedName $fromTableName,
+        Table $oldTable,
+        Index $index,
+        IndexColumns $indexColumns,
+        DOMElement $changeSetElt
+    ): void {
+        $createIndexElt = $this->document->createElement('createIndex');
+
+        if ($schemaName = $fromTableName->getNamespaceName()) {
+            $createIndexElt->setAttribute('schemaName', $schemaName);
+        }
+
+        $createIndexElt->setAttribute('tableName', $fromTableName->getName());
+
+        /**
+         * @psalm-suppress InternalMethod
+         */
+        $createIndexElt->setAttribute('indexName', $index->getName());
+        $createIndexElt->setAttribute('unique', $index->isUnique() ? 'true' : 'false');
+
+        foreach ($index->getColumns() as $columnName) {
+            $columnElt = $this->document->createElement('column');
+
+            if ($oldTable->hasColumn($columnName)) {
+                $column = $oldTable->getColumn($columnName);
+            } else {
+                if (VersionHelper::isDBALVersion4()) {
+                    /**
+                     * @psalm-suppress InvalidArrayOffset
+                     */
+                    $column = $tableDiff->getAddedColumns()[$columnName];
+                } else {
+                    /**
+                     * @psalm-suppress InternalProperty
+                     * @psalm-suppress InaccessibleProperty
+                     */
+                    $column = $tableDiff->addedColumns[$columnName];
+                }
+            }
+
+            assert($column instanceof Column);
+
+            $this->fillColumnAttributes($columnElt, $column, $indexColumns);
+
+            $createIndexElt->appendChild($columnElt);
+        }
+
+        $changeSetElt->appendChild($createIndexElt);
     }
 
     protected function alterTableAddedForeignKeys(TableDiff $tableDiff, DOMElement $changeSetElt): void
@@ -678,14 +696,25 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         QualifiedName $fromTableName,
         DOMElement $changeSetElt
     ): void {
+        $oldTable = $tableDiff->getOldTable();
+        /**
+         * @psalm-suppress TypeDoesNotContainNull
+         */
+        if ($oldTable === null) {
+            return;
+        }
+
         foreach ($tableDiff->getRenamedIndexes() as $oldName => $index) {
-            /**
-             * @psalm-suppress InternalMethod
-             */
-            $commentElt = $this->document->createComment(
-                ' renameIndex is not supported (index: ' . $oldName . ' => ' . $index->getName() . ')'
+            $this->dropIndex($fromTableName, $oldName, $changeSetElt);
+
+            $this->createIndex(
+                $tableDiff,
+                $fromTableName,
+                $oldTable,
+                $index,
+                new IndexColumns($oldTable),
+                $changeSetElt
             );
-            $changeSetElt->appendChild($commentElt);
         }
     }
 
@@ -715,19 +744,28 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         DOMElement $changeSetElt
     ): void {
         foreach ($tableDiff->getDroppedIndexes() as $index) {
-            $dropIndexElt = $this->document->createElement('dropIndex');
-
-            $indexName = QualifiedName::fromAsset($index);
-
-            if ($schemaName = $fromTableName->getNamespaceName()) {
-                $dropIndexElt->setAttribute('schemaName', $schemaName);
-            }
-
-            $dropIndexElt->setAttribute('tableName', $fromTableName->getName());
-            $dropIndexElt->setAttribute('indexName', $indexName->getName());
-
-            $changeSetElt->appendChild($dropIndexElt);
+            /**
+             * @psalm-suppress InternalMethod
+             */
+            $this->dropIndex($fromTableName, $index->getName(), $changeSetElt);
         }
+    }
+
+    protected function dropIndex(
+        QualifiedName $fromTableName,
+        string $indexName,
+        DOMElement $changeSetElt
+    ): void {
+        $dropIndexElt = $this->document->createElement('dropIndex');
+
+        if ($schemaName = $fromTableName->getNamespaceName()) {
+            $dropIndexElt->setAttribute('schemaName', $schemaName);
+        }
+
+        $dropIndexElt->setAttribute('tableName', $fromTableName->getName());
+        $dropIndexElt->setAttribute('indexName', $indexName);
+
+        $changeSetElt->appendChild($dropIndexElt);
     }
 
     protected function alterTableRemovedForeignKeys(
@@ -761,6 +799,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         DOMElement $changeSetElt
     ): void {
         $oldColumn = $columnDiff->getOldColumn();
+
         /**
          * @psalm-suppress TypeDoesNotContainNull
          */
@@ -768,10 +807,14 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             return;
         }
 
+        $column        = $columnDiff->getNewColumn();
         $oldColunmName = QualifiedName::fromAsset($oldColumn);
-        $columnName    = QualifiedName::fromAsset($columnDiff->getNewColumn());
+        $columnName    = QualifiedName::fromAsset($column);
 
-        if ($oldColunmName->getName() !== $columnName->getName()) {
+        /**
+         * @psalm-suppress InternalMethod
+         */
+        if ($oldColumn->getName() !== $column->getName()) {
             $renameColumnElt = $this->document->createElement('renameColumn');
 
             if ($schemaName = $fromTableName->getNamespaceName()) {
@@ -816,21 +859,19 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             $typeIndex = $columnDiff->hasTypeChanged();
 
             if ($typeIndex !== false) {
-                $modifyDataTypeElt = $this->document->createElement('modifyDataType');
+                $this->modifyDataType($columnDiff, $fromTableName, $column, $changeSetElt);
+                $properties -= 1;
+            }
 
-                if ($schemaName = $fromTableName->getNamespaceName()) {
-                    $modifyDataTypeElt->setAttribute('schemaName', $schemaName);
-                }
+            $defaultChanged = $columnDiff->hasDefaultChanged();
+            if ($defaultChanged !== false) {
+                $this->modifyDefaultValue($columnDiff, $fromTableName, $column, $changeSetElt);
+                $properties -= 1;
+            }
 
-                $modifyDataTypeElt->setAttribute('tableName', $fromTableName->getName());
-                $modifyDataTypeElt->setAttribute('columnName', $columnName->getName());
-                $modifyDataTypeElt->setAttribute(
-                    'newDataType',
-                    $this->getColumnType($columnDiff->getNewColumn())
-                );
-
-                $changeSetElt->appendChild($modifyDataTypeElt);
-
+            $changedNotNull = $columnDiff->hasNotNullChanged();
+            if ($changedNotNull !== false) {
+                $this->modifyNotNullConstraint($columnDiff, $fromTableName, $column, $changeSetElt);
                 $properties -= 1;
             }
         }
@@ -850,21 +891,116 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
         }
     }
 
-    /**
-     * @psalm-suppress PossiblyUnusedParam
-     */
-    protected function alterTableChangedIndex(
-        Index $index,
+    protected function modifyDataType(
+        ColumnDiff $columnDiff,
         QualifiedName $fromTableName,
+        Column $column,
         DOMElement $changeSetElt
     ): void {
+        $modifyDataTypeElt = $this->document->createElement('modifyDataType');
+
+        if ($schemaName = $fromTableName->getNamespaceName()) {
+            $modifyDataTypeElt->setAttribute('schemaName', $schemaName);
+        }
+
+        $modifyDataTypeElt->setAttribute('tableName', $fromTableName->getName());
+        /**
+          * @psalm-suppress InternalMethod
+          */
+        $modifyDataTypeElt->setAttribute('columnName', $column->getName());
+        $modifyDataTypeElt->setAttribute(
+            'newDataType',
+            $this->getColumnType($columnDiff->getNewColumn())
+        );
+
+        $changeSetElt->appendChild($modifyDataTypeElt);
+    }
+
+    protected function modifyDefaultValue(
+        ColumnDiff $columnDiff,
+        QualifiedName $fromTableName,
+        Column $column,
+        DOMElement $changeSetElt
+    ): void {
+        $dropDefaultValueElt = $this->document->createElement('dropDefaultValue');
+
+        if ($schemaName = $fromTableName->getNamespaceName()) {
+            $dropDefaultValueElt->setAttribute('schemaName', $schemaName);
+        }
+
+        $dropDefaultValueElt->setAttribute('tableName', $fromTableName->getName());
         /**
          * @psalm-suppress InternalMethod
          */
-        $commentElt = $this->document->createComment(
-            ' index changes are not supported (index: ' . $index->getName() . ')'
+        $dropDefaultValueElt->setAttribute('columnName', $column->getName());
+        $dropDefaultValueElt->setAttribute(
+            'columnDataType',
+            $this->getColumnType($columnDiff->getNewColumn())
         );
-        $changeSetElt->appendChild($commentElt);
+
+        $changeSetElt->appendChild($dropDefaultValueElt);
+
+        $addDefaultValueElt = $this->document->createElement('addDefaultValue');
+
+        if ($schemaName = $fromTableName->getNamespaceName()) {
+            $addDefaultValueElt->setAttribute('schemaName', $schemaName);
+        }
+
+        $addDefaultValueElt->setAttribute('tableName', $fromTableName->getName());
+        /**
+         * @psalm-suppress InternalMethod
+         */
+        $addDefaultValueElt->setAttribute('columnName', $column->getName());
+        $addDefaultValueElt->setAttribute(
+            'columnDataType',
+            $this->getColumnType($columnDiff->getNewColumn())
+        );
+
+        $default   = $column->getDefault();
+        $attribute = match (true) {
+            is_bool($default) => 'defaultValueBoolean',
+            is_numeric($default) => 'defaultValueNumeric',
+            default => 'defaultValue',
+        // phpcs:disable
+        };
+        // phpcs:enable
+
+        $defaultValue = match (true) {
+            is_bool($default) => $default ? 'true' : 'false',
+            is_numeric($default) => (string) $default,
+            default => (string) $default,
+        // phpcs:disable
+        };
+        // phpcs:enable
+
+        $addDefaultValueElt->setAttribute($attribute, $defaultValue);
+
+        $changeSetElt->appendChild($addDefaultValueElt);
+    }
+
+    protected function modifyNotNullConstraint(
+        ColumnDiff $columnDiff,
+        QualifiedName $fromTableName,
+        Column $column,
+        DOMElement $changeSetElt
+    ): void {
+        $addNotNullConstraint = $this->document->createElement('addNotNullConstraint');
+
+        if ($schemaName = $fromTableName->getNamespaceName()) {
+            $addNotNullConstraint->setAttribute('schemaName', $schemaName);
+        }
+
+        $addNotNullConstraint->setAttribute('tableName', $fromTableName->getName());
+        /**
+         * @psalm-suppress InternalMethod
+         */
+        $addNotNullConstraint->setAttribute('columnName', $column->getName());
+        $addNotNullConstraint->setAttribute(
+            'columnDataType',
+            $this->getColumnType($columnDiff->getNewColumn())
+        );
+
+        $changeSetElt->appendChild($addNotNullConstraint);
     }
 
     /**

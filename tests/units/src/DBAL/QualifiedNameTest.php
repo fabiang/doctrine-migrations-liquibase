@@ -6,30 +6,22 @@ namespace Fabiang\Doctrine\Migrations\Liquibase\DBAL;
 
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 
-/**
- * @coversDefaultClass Fabiang\Doctrine\Migrations\Liquibase\QualifiedName
- */
+#[CoversClass(QualifiedName::class)]
 final class QualifiedNameTest extends TestCase
 {
     use ProphecyTrait;
 
     private QualifiedName $object;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
     protected function setUp(): void
     {
         $this->object = new QualifiedName('name', 'namespace');
     }
 
-    /**
-     * @covers ::fromQualifiedName
-     */
     public function testFromQualifiedName(): void
     {
         $object = QualifiedName::fromQualifiedName('namespace.name');
@@ -37,9 +29,6 @@ final class QualifiedNameTest extends TestCase
         $this->assertSame('namespace', $object->getNamespaceName());
     }
 
-    /**
-     * @covers ::fromQualifiedName
-     */
     public function testFromQualifiedNameWithoutNamespace(): void
     {
         $object = QualifiedName::fromQualifiedName('name');
@@ -47,9 +36,6 @@ final class QualifiedNameTest extends TestCase
         $this->assertNull($object->getNamespaceName());
     }
 
-    /**
-     * @covers ::fromAsset
-     */
     public function testFromAsset(): void
     {
         $asset = $this->prophesize(ForeignKeyConstraint::class);
@@ -61,9 +47,6 @@ final class QualifiedNameTest extends TestCase
         $this->assertSame('namespace', $object->getNamespaceName());
     }
 
-    /**
-     * @covers ::fromAsset
-     */
     public function testFromAssetEmptyNamespace(): void
     {
         $asset = $this->prophesize(Column::class);
@@ -75,11 +58,6 @@ final class QualifiedNameTest extends TestCase
         $this->assertSame('', $object->getNamespaceName());
     }
 
-    /**
-     * @covers ::__construct
-     * @covers ::getNamespaceName
-     * @covers ::getName
-     */
     public function testConstructorAndGetters(): void
     {
         $this->assertSame('name', $this->object->getName());
