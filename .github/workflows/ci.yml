@@ -45,6 +45,8 @@ jobs:
             composer-args: ""
           - version: "8.4"
             composer-args: ""
+          - version: "8.5"
+            composer-args: "--ignore-platform-req=php"
         prefer-lowest: ["", "--prefer-lowest"]
     steps:
       - uses: actions/checkout@v6
