@@ -11,29 +11,32 @@ use Doctrine\DBAL\Schema\SchemaDiff;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\ORM\Tools\SchemaTool as DoctrineSchemaTool;
 use DOMDocument;
-use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseDOMDocumentOutput;
-use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputInterface;
-use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputOptions;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\DOMDocumentOutput;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\OutputInterface;
 
-use function array_merge;
 use function strcmp;
 use function usort;
 
 /**
  * @psalm-suppress UnusedClass
  */
-class LiquibaseSchemaTool extends SchemaTool
+class SchemaTool extends DoctrineSchemaTool
 {
-    private const array LIQUIBASE_TABLES = ['liquibase', 'liquibase_lock'];
+    private Options $options;
 
-    /**
-     * @param string[] $ignoreTables
-     */
-    public function __construct(private EntityManagerInterface $em, private array $ignoreTables = [])
-    {
+    public function __construct(
+        private EntityManagerInterface $em,
+        ?Options $options = null
+    ) {
         parent::__construct($em);
+
+        if ($options === null) {
+            $options = new Options();
+        }
+
+        $this->options = $options;
     }
 
     /**
@@ -42,7 +45,7 @@ class LiquibaseSchemaTool extends SchemaTool
      * @throws ORMException
      */
     public function diffChangeLog(
-        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null,
+        ?OutputInterface $output = null,
         ?array $metadata = null
     ): DOMDocument {
         $soutput   = $this->sanitizeOutputParameter($output);
@@ -70,7 +73,7 @@ class LiquibaseSchemaTool extends SchemaTool
      * @throws ORMException
      */
     public function changeLog(
-        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null,
+        ?OutputInterface $output = null,
         ?array $metadata = null
     ): DOMDocument {
         $soutput   = $this->sanitizeOutputParameter($output);
@@ -93,7 +96,7 @@ class LiquibaseSchemaTool extends SchemaTool
      */
     public function diffChangeLogFromSchemaDiff(
         SchemaDiff $schemaDiff,
-        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null
+        ?OutputInterface $output = null
     ): DOMDocument {
         $soutput = $this->sanitizeOutputParameter($output);
 
@@ -148,7 +151,7 @@ class LiquibaseSchemaTool extends SchemaTool
 
     private function removeLiquibaseTables(Schema $fromSchema): void
     {
-        $tables = array_merge(self::LIQUIBASE_TABLES, $this->ignoreTables);
+        $tables = $this->options->getIgnoreTables();
 
         foreach ($tables as $table) {
             if ($fromSchema->hasTable($table)) {
@@ -157,16 +160,13 @@ class LiquibaseSchemaTool extends SchemaTool
         }
     }
 
-    private function sanitizeOutputParameter(
-        LiquibaseOutputInterface|LiquibaseOutputOptions|null $output = null
-    ): LiquibaseOutputInterface {
-        if ($output instanceof LiquibaseOutputOptions) {
-            return new LiquibaseDOMDocumentOutput($output);
-        } elseif ($output instanceof LiquibaseOutputInterface) {
+    private function sanitizeOutputParameter(?OutputInterface $output = null): OutputInterface
+    {
+        if ($output instanceof OutputInterface) {
             return $output;
         }
 
-        return new LiquibaseDOMDocumentOutput();
+        return new DOMDocumentOutput($this->options);
     }
 
     /**

@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 
-#[CoversClass(LiquibaseOutputOptions::class)]
-final class LiquibaseOutputOptionsTest extends TestCase
+#[CoversClass(Options::class)]
+final class OptionsTest extends TestCase
 {
     use ProphecyTrait;
 
-    private LiquibaseOutputOptions $object;
+    private Options $object;
 
     protected function setUp(): void
     {
-        $this->object = new LiquibaseOutputOptions();
+        $this->object = new Options();
     }
 
     public function testSetterAndGetter(): void
