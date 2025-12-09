@@ -18,6 +18,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use DOMDocument;
 use Fabiang\Doctrine\Migrations\Liquibase\ColumnDiffTrait;
 use Fabiang\Doctrine\Migrations\Liquibase\Helper\VersionHelper;
+use Fabiang\Doctrine\Migrations\Liquibase\Options;
 use Fabiang\Doctrine\Migrations\Liquibase\TableDiffTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -26,16 +27,16 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 
-#[CoversClass(LiquibaseDOMDocumentOutput::class)]
-final class LiquibaseDOMDocumentOutputTest extends TestCase
+#[CoversClass(DOMDocumentOutput::class)]
+final class DOMDocumentOutputTest extends TestCase
 {
     use ColumnDiffTrait;
     use ProphecyTrait;
     use TableDiffTrait;
     use XPathAssert;
 
-    private LiquibaseDOMDocumentOutput $output;
-    private LiquibaseOutputOptions $options;
+    private DOMDocumentOutput $output;
+    private Options $options;
     private DOMDocument $document;
     private ObjectProphecy $em;
     private ObjectProphecy $connection;
@@ -43,13 +44,13 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->options = new LiquibaseOutputOptions();
+        $this->options = new Options();
         $this->options->setChangeSetUniqueId(false);
         $this->options->setChangeSetAuthor('phpunit');
 
         $this->document = new DOMDocument();
 
-        $this->output = new LiquibaseDOMDocumentOutput($this->options, $this->document);
+        $this->output = new DOMDocumentOutput($this->options, $this->document);
 
         $this->platform = $this->prophesize(AbstractPlatform::class);
         $this->platform->getStringTypeDeclarationSQL(Argument::any())->willReturn('test');
@@ -66,8 +67,8 @@ final class LiquibaseDOMDocumentOutputTest extends TestCase
 
     public function testDefaultConstructorOptions(): void
     {
-        $output = new LiquibaseDOMDocumentOutput();
-        $this->assertInstanceOf(LiquibaseOutputOptions::class, $output->getOptions());
+        $output = new DOMDocumentOutput();
+        $this->assertInstanceOf(Options::class, $output->getOptions());
         $this->assertInstanceOf(DOMDocument::class, $output->getDocument());
         $this->assertInstanceOf(DOMDocument::class, $output->getResult());
     }

@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\ORM\EntityManagerInterface;
 
-interface LiquibaseOutputInterface
+interface OutputInterface
 {
     public function createSchema(string $newNamespace): void;
 

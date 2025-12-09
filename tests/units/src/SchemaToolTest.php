@@ -24,21 +24,21 @@ use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Tools\ToolEvents;
 use DOMDocument;
 use Fabiang\Doctrine\Migrations\Liquibase\Helper\VersionHelper;
-use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputInterface;
+use Fabiang\Doctrine\Migrations\Liquibase\Output\OutputInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 
-#[CoversClass(LiquibaseSchemaTool::class)]
-final class LiquibaseSchemaToolTest extends TestCase
+#[CoversClass(SchemaTool::class)]
+final class SchemaToolTest extends TestCase
 {
     use ProphecyTrait;
     use SchemaDiffTrait;
     use TableDiffTrait;
 
-    private LiquibaseSchemaTool $object;
+    private SchemaTool $object;
     private ObjectProphecy $em;
     private ObjectProphecy $connection;
     private ObjectProphecy $platform;
@@ -72,14 +72,14 @@ final class LiquibaseSchemaToolTest extends TestCase
         $this->em->getConfiguration()->willReturn($this->emConfig->reveal());
         $this->em->getEventManager()->willReturn($this->eventManager->reveal());
 
-        $this->object = new LiquibaseSchemaTool($this->em->reveal());
+        $this->object = new SchemaTool($this->em->reveal());
     }
 
     public function testDiffChangeLog(): void
     {
         $dom = new DOMDocument();
 
-        $output = $this->prophesize(LiquibaseOutputInterface::class);
+        $output = $this->prophesize(OutputInterface::class);
         $output->started(Argument::type(EntityManagerInterface::class));
         $output->terminated();
         $output->getResult()->willReturn($dom);
@@ -103,13 +103,16 @@ final class LiquibaseSchemaToolTest extends TestCase
         ]);
 
         $schema = $this->prophesize(Schema::class);
-        $schema->hasTable('liquibase')->shouldBeCalled()->willReturn(true);
-        $schema->hasTable('liquibase_lock')->shouldBeCalled()->willReturn(false);
+        $schema->hasTable(Argument::notIn(['DATABASECHANGELOG', 'DATABASECHANGELOGLOCK']))
+            ->shouldNotBeCalled()
+            ->willReturn(false);
+        $schema->hasTable('DATABASECHANGELOG')->shouldBeCalled()->willReturn(true);
+        $schema->hasTable('DATABASECHANGELOGLOCK')->shouldBeCalled()->willReturn(false);
 
-        $schema->dropTable('liquibase')->shouldBeCalled()->will(function () use ($schema) {
+        $schema->dropTable('DATABASECHANGELOG')->shouldBeCalled()->will(function () use ($schema) {
             return $schema->reveal();
         });
-        $schema->dropTable('liquibase_lock')->shouldNotBeCalled()->will(function () use ($schema) {
+        $schema->dropTable('DATABASECHANGELOGLOCK')->shouldNotBeCalled()->will(function () use ($schema) {
             return $schema->reveal();
         });
 
@@ -130,7 +133,7 @@ final class LiquibaseSchemaToolTest extends TestCase
     public function testDiffChangeLogMetadataFromFactory(): void
     {
         $dom    = new DOMDocument();
-        $output = $this->prophesize(LiquibaseOutputInterface::class);
+        $output = $this->prophesize(OutputInterface::class);
         $output->started(Argument::type(EntityManagerInterface::class));
         $output->terminated();
         $output->getResult()->willReturn($dom);
@@ -154,15 +157,19 @@ final class LiquibaseSchemaToolTest extends TestCase
         ]);
 
         $schema = $this->prophesize(Schema::class);
-        $schema->hasTable('liquibase')->shouldBeCalled()->willReturn(true);
-        $schema->hasTable('liquibase_lock')->shouldBeCalled()->willReturn(false);
+        $schema->hasTable(Argument::notIn(['DATABASECHANGELOG', 'DATABASECHANGELOGLOCK']))
+            ->shouldNotBeCalled()
+            ->willReturn(false);
+        $schema->hasTable('DATABASECHANGELOG')->shouldBeCalled()->willReturn(true);
+        $schema->hasTable('DATABASECHANGELOGLOCK')->shouldBeCalled()->willReturn(false);
 
-        $schema->dropTable('liquibase')->shouldBeCalled()->will(function () use ($schema) {
+        $schema->dropTable('DATABASECHANGELOG')->shouldBeCalled()->will(function () use ($schema) {
             return $schema->reveal();
         });
-        $schema->dropTable('liquibase_lock')->shouldNotBeCalled()->will(function () use ($schema) {
+        $schema->dropTable('DATABASECHANGELOGLOCK')->shouldNotBeCalled()->will(function () use ($schema) {
             return $schema->reveal();
         });
+
         $schema->getNamespaces()->willReturn([]);
         $schema->getTables()->willReturn([]);
         $schema->getSequences()->willReturn([]);
@@ -180,7 +187,7 @@ final class LiquibaseSchemaToolTest extends TestCase
     public function testChangeLog(): void
     {
         $dom    = new DOMDocument();
-        $output = $this->prophesize(LiquibaseOutputInterface::class);
+        $output = $this->prophesize(OutputInterface::class);
         $output->started(Argument::type(EntityManagerInterface::class));
         $output->terminated();
         $output->getResult()->willReturn($dom);
@@ -222,7 +229,7 @@ final class LiquibaseSchemaToolTest extends TestCase
     {
         $domDocument = new DOMDocument();
 
-        $output = $this->prophesize(LiquibaseOutputInterface::class);
+        $output = $this->prophesize(OutputInterface::class);
 
         $output->getResult()
             ->willReturn($domDocument);

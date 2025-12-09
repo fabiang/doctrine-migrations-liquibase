@@ -23,6 +23,7 @@ use DOMElement;
 use Fabiang\Doctrine\Migrations\Liquibase\DBAL\IndexColumns;
 use Fabiang\Doctrine\Migrations\Liquibase\DBAL\QualifiedName;
 use Fabiang\Doctrine\Migrations\Liquibase\Helper\VersionHelper;
+use Fabiang\Doctrine\Migrations\Liquibase\Options;
 use Override;
 
 use function array_key_exists;
@@ -39,17 +40,19 @@ use function sprintf;
 use function strval;
 use function uniqid;
 
-class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
+class DOMDocumentOutput implements OutputInterface
 {
     private DOMDocument $document;
-    private LiquibaseOutputOptions $options;
+    private Options $options;
     private AbstractPlatform $platform;
     private DOMElement $root;
 
-    public function __construct(?LiquibaseOutputOptions $options = null, ?DOMDocument $document = null)
-    {
+    public function __construct(
+        ?Options $options = null,
+        ?DOMDocument $document = null
+    ) {
         if (null === $options) {
-            $options = new LiquibaseOutputOptions();
+            $options = new Options();
         }
 
         $this->options = $options;
@@ -58,10 +61,9 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             $document                     = new DOMDocument();
             $document->preserveWhiteSpace = false;
             $document->formatOutput       = true;
-            $this->document               = $document;
-        } else {
-            $this->document = $document;
         }
+
+        $this->document = $document;
 
         $this->root     = $this->document->createElement('databaseChangeLog');
         $this->platform = new MySQLPlatform();
@@ -78,7 +80,7 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
     /**
      * @psalm-suppress PossiblyUnusedMethod
      */
-    public function getOptions(): LiquibaseOutputOptions
+    public function getOptions(): Options
     {
         return $this->options;
     }
@@ -704,7 +706,19 @@ class LiquibaseDOMDocumentOutput implements LiquibaseOutputInterface
             return;
         }
 
-        foreach ($tableDiff->getRenamedIndexes() as $oldName => $index) {
+        $renamedIndex = $tableDiff->getRenamedIndexes();
+
+        if (count($renamedIndex) > 0) {
+            /**
+             * @psalm-suppress InternalMethod
+             */
+            $commentElt = $this->document->createComment(
+                ' Renamed Indexes '
+            );
+            $changeSetElt->appendChild($commentElt);
+        }
+
+        foreach ($renamedIndex as $oldName => $index) {
             $this->dropIndex($fromTableName, $oldName, $changeSetElt);
 
             $this->createIndex(

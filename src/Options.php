@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Fabiang\Doctrine\Migrations\Liquibase\Output;
+namespace Fabiang\Doctrine\Migrations\Liquibase;
 
-class LiquibaseOutputOptions
+class Options
 {
     private bool $usePlatformTypes  = false;
     private bool $changeSetUniqueId = true;
     private string $changeSetAuthor = 'doctrine-migrations-liquibase';
+    private array $ignoreTables     = [
+        'DATABASECHANGELOG',
+        'DATABASECHANGELOGLOCK',
+    ];
 
     public function isUsePlatformTypes(): bool
     {
@@ -50,5 +54,22 @@ class LiquibaseOutputOptions
     {
         $this->changeSetAuthor = $changeSetAuthor;
         return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getIgnoreTables(): array
+    {
+        return $this->ignoreTables;
+    }
+
+    /**
+     * @psalm-suppress PossiblyUnusedMethod
+     * @params string[] $ignoreTables
+     */
+    public function setIgnoreTables(array $ignoreTables): void
+    {
+        $this->ignoreTables = $ignoreTables;
     }
 }

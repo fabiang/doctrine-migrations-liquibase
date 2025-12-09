@@ -13,7 +13,6 @@ use Doctrine\DBAL\Driver;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\Driver\AttributeDriver;
-use Fabiang\Doctrine\Migrations\Liquibase\Output\LiquibaseOutputOptions;
 use SebastianBergmann\Comparator\ComparisonFailure;
 use Webmozart\Assert\Assert;
 
@@ -61,14 +60,14 @@ abstract class AbstractDBContext implements Context
 
     protected function changelogIsExecuted(): void
     {
-        $schemaTool   = new LiquibaseSchemaTool($this->em, $this->ignoreTables);
-        $this->output = $schemaTool->changeLog($this->options())->saveXML();
+        $schemaTool   = new SchemaTool($this->em, $this->options());
+        $this->output = $schemaTool->changeLog()->saveXML();
     }
 
     protected function diffChangelogIsExecuted(): void
     {
-        $schemaTool   = new LiquibaseSchemaTool($this->em, $this->ignoreTables);
-        $this->output = $schemaTool->diffChangeLog($this->options())->saveXML();
+        $schemaTool   = new SchemaTool($this->em, $this->options());
+        $this->output = $schemaTool->diffChangeLog()->saveXML();
     }
 
     protected function theOutputXmlShouldBe(PyStringNode $expected): void
@@ -103,10 +102,11 @@ abstract class AbstractDBContext implements Context
         $this->em = null;
     }
 
-    protected function options(): LiquibaseOutputOptions
+    protected function options(): Options
     {
-        $options = new LiquibaseOutputOptions();
+        $options = new Options();
         $options->setChangeSetUniqueId(false);
+        $options->setIgnoreTables($this->ignoreTables);
         return $options;
     }
 }
