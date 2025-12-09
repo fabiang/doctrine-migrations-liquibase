@@ -1,0 +1,16 @@
+[settings]
+experimental = true
+
+[tools]
+php = "8.4"
+
+[env]
+_.file = '.envrc'
+
+[hooks]
+cd = "docker compose up -d"
+leave = "docker compose -f $MISE_PREVIOUS_DIR/docker-compose.yml stop"
+postinstall = [
+  "php .mise/install_xdebug.php",
+  "php .mise/install_pdo_sqlsrv.php"
+]

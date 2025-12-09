@@ -1,5 +1,6 @@
 .github/ export-ignore
 .husky/ export-ignore
+.mise/ export-ignore
 tests/ export-ignore
 .envrc export-ignore
 .gitattributes export-ignore
@@ -9,3 +10,4 @@ tests/ export-ignore
 behat.php export-ignore
 composer.lock export-ignore
 docker-compose.yml export-ignore
+mise.toml export-ignore

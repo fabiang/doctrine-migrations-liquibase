@@ -1,5 +1,9 @@
 #!/bin/sh
+mise use php@8.4
+
 composer lint
+
+mise use php@8.3
 
 composer unittest
 composer integration
@@ -7,5 +11,25 @@ composer integration
 composer up --prefer-lowest
 composer unittest
 composer integration
+
+mise use php@8.4
+
+composer unittest
+composer integration
+
+composer up --prefer-lowest
+composer unittest
+composer integration
+
+mise use php@8.5
+
+composer unittest
+composer integration
+
+composer up --prefer-lowest
+composer unittest
+composer integration
+
+mise use php@8.4
 
 composer up
